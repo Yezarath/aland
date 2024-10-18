@@ -1,0 +1,6 @@
+build/
+credentials.json
+snippet.js
+package-lock.json
+G_803.json
+node_modules/

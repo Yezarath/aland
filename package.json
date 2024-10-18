@@ -1,0 +1,24 @@
+{
+  "name": "aland_saint",
+  "version": "1.0.0",
+  "main": "build/main.js",
+  "scripts": {
+    "build": "tsc",
+    "credentials": "mkdir -p build&& cp credentials.json build/credentials.json",
+    "start": "npm run build && npm run credentials && node --no-deprecation build/main.js"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "eslint": "^9.12.0",
+    "globals": "^15.11.0",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.8.1"
+  },
+  "dependencies": {
+    "alclient": "^0.21.6"
+  }
+}
