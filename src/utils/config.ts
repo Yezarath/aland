@@ -6,12 +6,12 @@ import * as Logger from './logger.js';
 type CfgValueType =
 	string | number | boolean | ServerRegion | ServerIdentifier | MonsterName[];
 
-class Config {
-	static #instance: Config;
+class __Config {
+	static #instance: __Config;
 	static #config: Record<string, CfgValueType> = {};
 
 	constructor() {
-		if (Config.#instance) {
+		if (__Config.#instance) {
 			throw new Error("Cannot create a new instance of Config");
 		}
 		this.set_config<ServerRegion>("server_region", "EU");
@@ -32,10 +32,10 @@ class Config {
 	}
 
 	static init() {
-		if (!Config.#instance) {
-			Config.#instance = new Config();
+		if (!__Config.#instance) {
+			__Config.#instance = new __Config();
 		}
-		return Config.#instance;
+		return __Config.#instance;
 	}
 
 	load_config() {
@@ -46,7 +46,7 @@ class Config {
 		if (!fs.existsSync(config_path)) {
 			Logger.warn("Config", "Config file not found, creating a new one");
 			fs.writeFileSync(config_path,
-				JSON.stringify(Config.#config, null, 2)
+				JSON.stringify(__Config.#config, null, 2)
 			);
 		} else {
 			const fc = fs.readFileSync(config_path, 'utf-8');
@@ -56,34 +56,34 @@ class Config {
 					throw new Error("Invalid config file");
 				}
 				for (const key in cfg) {
-					if (!(key in Config.#config)) {
+					if (!(key in __Config.#config)) {
 						Logger.warn("Config", `Unknown key in config: '${key}'`);
 						delete cfg[key];
 						continue;
 					}
-					if (typeof cfg[key] !== typeof Config.#config[key]) {
-						cfg[key] = Config.#config[key];
+					if (typeof cfg[key] !== typeof __Config.#config[key]) {
+						cfg[key] = __Config.#config[key];
 						Logger.error("Config", `Invalid type for key: '${key}'`);
 						Logger.warn("Config",
 							`Using default value: '${key}'='${cfg[key]}'`
 						);
 					}
 				}
-				Config.#config = cfg;
-			} catch (error) {
-				throw new Error("Error loading config file: " + error.message);
+				__Config.#config = cfg;
+			} catch (e) {
+				throw new Error("Error loading config file: " + e.message);
 			}
 		}
 		Logger.log("Config", "Config loaded!");
 	}
 
 	set_config<T extends CfgValueType>(key: string, value: T): void {
-		Config.#config[key] = value;
+		__Config.#config[key] = value;
 	}
 
 	unset_config(key: string): void {
-		if (key in Config.#config) {
-			delete Config.#config[key];
+		if (key in __Config.#config) {
+			delete __Config.#config[key];
 		} else {
 			Logger.error("Config", `Attempted to unset non-existent key: '${key}'`);
 		}
@@ -95,17 +95,19 @@ class Config {
 			'../config.json'
 		);
 		fs.writeFileSync(config_path,
-			JSON.stringify(Config.#config, null, 2)
+			JSON.stringify(__Config.#config, null, 2)
 		);
 		Logger.log("Config", "Config saved!");
 	}
 
 	get_config<T extends CfgValueType>(key: string): T | undefined {
-		if (!(key in Config.#config)) {
+		if (!(key in __Config.#config)) {
 			return undefined;
 		}
-		return Config.#config[key] as T;
+		return __Config.#config[key] as T;
 	}
 }
 
-export const config = Config.init();
+export const Config = __Config.init();
+
+export default Config;

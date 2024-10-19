@@ -1,11 +1,18 @@
 {
 	"compilerOptions": {
-		"module": "esnext",
-		"esModuleInterop": true,
-		"target": "ES2017",
+		"module": "ESNext",
+		// "target": "ES2017",
+		"target": "ESNext",
 		"moduleResolution": "node",
-		"sourceMap": true,
-		"outDir": "build"
+		"outDir": "build",
+		"rootDir": "src",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"strict": true,
+		"useUnknownInCatchVariables": false,
+		"skipLibCheck": true,
+		"sourceMap": true
 	},
 	"include": [
 		"src/**/*.ts"
@@ -13,8 +20,5 @@
 	"exclude": [
 		"node_modules",
 		"build"
-	],
-	"lib": [
-		"es2017"
 	]
 }

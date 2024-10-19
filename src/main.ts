@@ -3,7 +3,7 @@ import { Mage } from "./classes/mage.js";
 import { Merchant } from "./classes/merchant.js";
 import { Ranger } from "./classes/ranger.js";
 import { Warrior } from "./classes/warrior.js";
-import { config as Config } from "./utils/config.js";
+import Config from "./utils/config.js";
 import * as Logger from "./utils/logger.js";
 
 async function run() {
@@ -31,8 +31,8 @@ async function run() {
 		// Start all characters
 		await Promise.all(characters.map(async character => {
 			return character.start_character(
-				Config.get_config<ServerRegion>("server_region"),
-				Config.get_config<ServerIdentifier>("server_identifier")
+				Config.get_config<ServerRegion>("server_region") ?? "EU",
+				Config.get_config<ServerIdentifier>("server_identifier") ?? "I"
 			);
 		}));
 		// Run all characters
