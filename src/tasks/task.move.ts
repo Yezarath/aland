@@ -1,4 +1,4 @@
-import { Tools } from "alclient"; // Adjust the import path as necessary
+import { Tools, Warrior } from "alclient"; // Adjust the import path as necessary
 import { Bot } from "../classes/bot.js";
 
 export async function move<T extends Bot>(self: T, timeout: number): Promise<number> {
@@ -8,17 +8,24 @@ export async function move<T extends Bot>(self: T, timeout: number): Promise<num
 	if (self.targets.length === 0 || gc.rip) return timeout;
 
 	const target = gc.getTargetEntity();
-	// if no entity found, smart move towards one.
 	if (!target) {
-		// meh, maybe use the callback to stop smart moving
-		if (gc.smartMoving) await gc.stopSmartMove();
-		await gc.smartMove(self.targets[0]);
-		return timeout;
-	}
-	const distance = Tools.distance(gc, target);
-	if (distance > gc.range) {
-		await gc.smartMove(target, { getWithin: gc.range - target.speed });
-		timeout = ((distance / gc.speed) * 1000) + gc.ping;
+		const nearest = gc.getEntity(self.get_attack_filter());
+		if (!nearest) {
+			if (gc.smartMoving) await gc.stopSmartMove();
+			await gc.smartMove(self.targets[0], {
+				resolveOnFinalMoveStart: true,
+				getWithin: gc.range
+			});
+		}
+	} else {
+		const distance = Tools.distance(gc, target);
+		if (distance > gc.range) {
+			if (gc.canUse("charge") && (distance - gc.range) / gc.speed > 2.5)
+				await self.gc<Warrior>().charge();
+			await gc.smartMove(target, {
+				getWithin: Math.max(0, gc.range - target.speed)
+			});
+		}
 	}
 	return timeout;
 }

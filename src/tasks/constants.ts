@@ -1,9 +1,9 @@
 
 export const Constants = {
 	Timeouts: {
-		MOVE: 60,
+		MOVE: 130,
 		ATTACK: 10,
-		TARGET: 100,
+		TARGET: 30,
 		LOOT: 250,
 		POTION: 350,
 		HUNT_START: 1000,

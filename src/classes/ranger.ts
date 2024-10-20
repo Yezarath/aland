@@ -1,17 +1,13 @@
-import { Ranger as GameRanger, MonsterName } from "alclient";
+import { MonsterName } from "alclient";
 import Config from "../utils/config.js";
 import { LogLevel } from "../utils/logger.js";
 import { Bot, BotMode, BotType } from "./bot.js";
 
-export class Ranger extends Bot {
+export class BotRanger extends Bot {
 	constructor(id: string | undefined) {
 		if (id === undefined)
 			throw new Error("Ranger ID is not defined");
 		super(id, BotType.Ranger);
-	}
-
-	public gc(): GameRanger {
-		return super.gc() as GameRanger;
 	}
 
 	async run(): Promise<void> {

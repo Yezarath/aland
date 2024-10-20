@@ -14,13 +14,15 @@ export async function hunt_start<T extends Bot>(self: T, timeout: number): Promi
 	if (gc.s.monsterhunt !== undefined) {
 		// TODO: Fading Timeouts make me come back there even though it's still defined
 		// -- Find someway to avoid it.
+
 		// Check if the monsterhunt is allowed.
 		self.log(`Quest target is '${gc.s.monsterhunt.id}'`, LogLevel.INFO);
 		if (ids.includes(gc.s.monsterhunt.id)) {
+			self.log({
+				message: 'ID allowed, Monster hunt started!',
+				data: { duration: gc.s.monsterhunt.ms, quantity: gc.s.monsterhunt.c }
+			}, LogLevel.WARNING);
 			self.targets = [gc.s.monsterhunt.id];
-			self.log(`ID allowed, Monster hunt started! \n\t\t`
-				+ `{d='${gc.s.monsterhunt.ms}ms', q='${gc.s.monsterhunt.c}'`,
-				LogLevel.WARNING);
 			TaskLauncher.restart(hunt_finish, self, Task.Constants.Timeouts.HUNT_FINISH);
 		} else self.log("ID not allowed, Monster hunt ignored!", LogLevel.INFO);
 		return gc.s.monsterhunt.ms + gc.ping + Task.Constants.Timeouts.HUNT_OFFSET;

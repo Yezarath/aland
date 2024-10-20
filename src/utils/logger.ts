@@ -1,6 +1,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import * as util from 'util';
 import { BotType } from '../classes/bot.js';
 import Config from './config.js';
 
@@ -33,7 +34,11 @@ function get_class_color(bot_type: BotType): string {
 	return '\x1b[1m\x1b[90m';
 }
 
-function is_ignored_error(message: string): boolean {
+export type LogMessage = string | { message: string, data: unknown };
+
+function is_ignored_error(message: LogMessage): boolean {
+	if (message === undefined) return true;
+	if (typeof message !== 'string') return is_ignored_error(message.message);
 	return [
 		/smartMove to .* cancelled \(new smartMove started\)/,
 		/target '\d+' not found/,
@@ -43,7 +48,7 @@ function is_ignored_error(message: string): boolean {
 	].some(regex => regex.test(message));
 }
 
-export function log(name: string, message: string, options?: {
+export function log(name: string, message: LogMessage, options?: {
 	bot_type?: BotType;
 	log_level?: LogLevel;
 }): void {
@@ -73,11 +78,20 @@ export function log(name: string, message: string, options?: {
 	const bef_white_spaces = ' '.repeat((padding) / 2);
 	const aft_white_spaces = ' '.repeat((padding) / 2 + (padding) % 2);
 
-	const to_print =
+	const msg = (typeof message === 'string') ? message : message.message;
+
+	let to_print =
 		`${log_color}[${formatted_date}.${milliseconds}] ` +
 		`| ${bef_white_spaces}` +
 		`[${class_color}${name}\x1b[0m${log_color}]` +
-		`${aft_white_spaces}~ ${message}\x1b[0m`;
+		`${aft_white_spaces}~ ${msg}\x1b[0m`;
+	if (typeof message !== 'string') {
+		to_print += '\n' + util.inspect(message.data, {
+			colors: true, depth: null, breakLength: 80, compact: false
+		});
+	}
+
+
 	if (Config.get_config<boolean>("saving_logs") === true) {
 		const date = formatted_date.substring(0, 10).replace(/\//g, "_");
 		const file = path.resolve(
@@ -90,7 +104,7 @@ export function log(name: string, message: string, options?: {
 	aland_tracker();
 }
 
-export function debug(name: string, message: unknown, options?: {
+export function debug(name: string, message: LogMessage, options?: {
 	bot_type?: BotType;
 }): void {
 	const m = JSON.stringify(message, undefined, 2);
@@ -100,7 +114,7 @@ export function debug(name: string, message: unknown, options?: {
 	});
 }
 
-export function error(name: string, message: string, options?: {
+export function error(name: string, message: LogMessage, options?: {
 	bot_type?: BotType;
 }): void {
 	log(name, message, {
@@ -109,7 +123,7 @@ export function error(name: string, message: string, options?: {
 	});
 }
 
-export function warn(name: string, message: string, options?: {
+export function warn(name: string, message: LogMessage, options?: {
 	bot_type?: BotType;
 }): void {
 	log(name, message, {
@@ -129,6 +143,13 @@ const __console = {
 
 export function override_console() {
 	if (console_overriden) return;
+	util.inspect.styles = {
+		string: 'greenBright', number: 'blueBright',
+		bigint: 'redBright', boolean: 'cyanBright',
+		symbol: 'magentaBright', undefined: 'gray',
+		special: 'magentaBright', null: 'gray', date: 'red',
+		regexp: 'blue', module: 'magenta'
+	};
 	const is_caller_allowed = () => {
 		const stack = new Error().stack;
 		if (stack) {

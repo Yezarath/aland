@@ -1,8 +1,8 @@
 import AL, { ServerIdentifier, ServerRegion } from "alclient";
-import { Mage } from "./classes/mage.js";
-import { Merchant } from "./classes/merchant.js";
-import { Ranger } from "./classes/ranger.js";
-import { Warrior } from "./classes/warrior.js";
+import { BotMage } from "./classes/mage.js";
+import { BotMerchant } from "./classes/merchant.js";
+import { BotRanger } from "./classes/ranger.js";
+import { BotWarrior } from "./classes/warrior.js";
 import Config from "./utils/config.js";
 import * as Logger from "./utils/logger.js";
 
@@ -24,10 +24,10 @@ async function run() {
 		Logger.log("System", "Pathfinder ready!");
 
 		const characters = [
-			new Merchant(Config.get_config<string>("merchant_id")),
-			new Warrior(Config.get_config<string>("warrior_id")),
-			new Mage(Config.get_config<string>("mage_id")),
-			new Ranger(Config.get_config<string>("ranger_id"))
+			new BotMerchant(Config.get_config<string>("merchant_id")),
+			new BotWarrior(Config.get_config<string>("warrior_id")),
+			new BotMage(Config.get_config<string>("mage_id")),
+			new BotRanger(Config.get_config<string>("ranger_id"))
 		];
 		// Start all characters
 		await Promise.allSettled(characters.map(async character => {

@@ -12,20 +12,18 @@ export async function potion<T extends Bot>(self: T, timeout: number): Promise<n
 
 	const health_ratio = gc.hp / gc.max_hp;
 	const mana_ratio = gc.mp / gc.max_mp;
-	if (health_ratio < mana_ratio) {
+	if (health_ratio < mana_ratio || gc.hp < 0.5 * gc.max_hp) {
 		const hpot = gc.locateItem("hpot0");
 		const diff = gc.max_hp - gc.hp;
 		if (hpot !== undefined && diff >= 200) await gc.usePotion(hpot);
 		else if (diff >= 50) await gc.regenHP();
-		if (gc.isOnCooldown("use_hp"))
-			timeout = gc.getCooldown("use_hp") + gc.ping;
+		timeout = gc.getCooldown("use_hp") + gc.ping;
 	} else {
 		const mpot = gc.locateItem("mpot0");
 		const diff = gc.max_mp - gc.mp;
 		if (mpot !== undefined && diff >= 300) await gc.usePotion(mpot);
 		else if (diff >= 100) await gc.regenMP();
-		if (gc.isOnCooldown("use_mp"))
-			timeout = gc.getCooldown("use_mp") + gc.ping;
+		timeout = gc.getCooldown("use_mp") + gc.ping;
 	}
 	return timeout;
 }

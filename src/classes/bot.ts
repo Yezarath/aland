@@ -1,5 +1,7 @@
 import AL, {
 	PingCompensatedCharacter as GameCharacter,
+	GetEntityFilters,
+	HitData,
 	LimitDCReportData,
 	MonsterName,
 	ServerIdentifier, ServerRegion
@@ -7,12 +9,12 @@ import AL, {
 import TaskLauncher from '../tasks/launcher.js';
 import Task from '../tasks/task.js';
 import Config from '../utils/config.js';
-import Logger, { LogLevel } from "../utils/logger.js";
+import Logger, { LogLevel, LogMessage } from "../utils/logger.js";
 import { sleep } from '../utils/sleep.js';
 
 export enum BotMode {
 	Idle,
-	Attack = 1,
+	Attack,
 	Sulking
 }
 
@@ -62,9 +64,9 @@ export abstract class Bot {
 
 	get bot_type(): BotType { return this.#bot_type }
 
-	public gc(): GameCharacter {
+	public gc<T extends GameCharacter>(): T {
 		if (this.#gc === undefined) throw new Error(`Character ${this.#id} not started!`);
-		return this.#gc;
+		return this.#gc as T;
 	}
 	//#endregion
 
@@ -78,7 +80,7 @@ export abstract class Bot {
 		this.is_started = false;
 	}
 
-	public log(message: string, log_level?: LogLevel): void {
+	public log(message: LogMessage, log_level?: LogLevel): void {
 		Logger.log(this.#id, message, {
 			bot_type: this.#bot_type,
 			log_level: log_level,
@@ -139,13 +141,17 @@ export abstract class Bot {
 			if (this.is_leader)
 				TaskLauncher.start(Task.party, this, Task.Constants.Timeouts.PARTY);
 			else this.on_invite(); // Listener for party invite, might find a way to link that to a task.
+
+
 			if (this.#bot_type !== BotType.Merchant) {
+				this.on_stacked();
 				TaskLauncher.start(Task.move, this, Task.Constants.Timeouts.MOVE);
 				TaskLauncher.start(Task.attack, this, Task.Constants.Timeouts.ATTACK);
 				TaskLauncher.start(Task.target, this, Task.Constants.Timeouts.TARGET);
 				TaskLauncher.start(Task.hunt_start, this, Task.Constants.Timeouts.HUNT_START);
 			} else {
 				TaskLauncher.start(Task.mstand, this, Task.Constants.Timeouts.MSTAND);
+				TaskLauncher.start(Task.mluck, this, Task.Constants.Timeouts.MLUCK);
 			}
 			TaskLauncher.start(Task.potion, this, Task.Constants.Timeouts.POTION);
 			TaskLauncher.start(Task.loot, this, Task.Constants.Timeouts.LOOT);
@@ -154,7 +160,10 @@ export abstract class Bot {
 
 			// For debug purposes :
 			this.gc().socket.on("limitdcreport", (data: LimitDCReportData) => {
-				Logger.debug("DEBUG", data);
+				Logger.debug("DEBUG", {
+					message: "Limit DC Report =>",
+					data: data
+				});
 			});
 
 
@@ -165,30 +174,30 @@ export abstract class Bot {
 	}
 
 	protected on_disconnect(): void {
-		const dc = () => {
+		const callback = () => {
 			this.gc().disconnect();
 			this.should_stop = true;
 		};
 
-		process.on("SIGINT", dc);
-		process.on("SIGQUIT", dc);
-		process.on("SIGTERM", dc);
-		process.on("exit", dc);
+		process.on("SIGINT", callback);
+		process.on("SIGQUIT", callback);
+		process.on("SIGTERM", callback);
+		process.on("exit", callback);
 
 		this.gc().socket.on("disconnect", (reason) => {
 			this.log(`Disconnected for '${reason}'!`, LogLevel.ERROR);
 
-			process.removeListener("SIGINT", dc);
-			process.removeListener("SIGQUIT", dc);
-			process.removeListener("SIGTERM", dc);
-			process.removeListener("exit", dc);
+			process.removeListener("SIGINT", callback);
+			process.removeListener("SIGQUIT", callback);
+			process.removeListener("SIGTERM", callback);
+			process.removeListener("exit", callback);
 		});
 	}
 
 	protected on_invite(): void {
 		if (this.is_leader) return;
 		const gc = this.gc();
-		const on_invite_run = async (data: { name: string; }) => {
+		const callback = async (data: { name: string; }) => {
 			const ids = [
 				Config.get_config<string>("merchant_id"),
 				Config.get_config<string>("warrior_id"),
@@ -211,13 +220,41 @@ export abstract class Bot {
 								this.log("Failed to join party after 5 retry!",
 									LogLevel.ERROR
 								);
-								gc.socket.once("invite", on_invite_run);
+								gc.socket.once("invite", callback);
 							} else await sleep(1000);
 						});
 				}
 				this.log(`Joined '${data.name}' party`, LogLevel.WARNING);
 			}
 		};
-		gc.socket.on("invite", on_invite_run);
+		gc.socket.on("invite", callback);
+	}
+
+	protected on_stacked(): void {
+		const gc = this.gc();
+		const callback = async (data: HitData) => {
+			if (data.id !== gc.id) return;
+			if (!data.stacked) return;
+			if (!data.stacked.includes(gc.id)) return;
+
+			this.log({
+				message: "Character is stacked, moving away!",
+				data: { damage: data.damage, stacked: data.stacked }
+			}, LogLevel.WARNING);
+
+			const x = -gc.width + Math.round(gc.width * 2 * Math.random());
+			const y = -gc.height + Math.round(gc.height * 2 * Math.random());
+			await gc.move(gc.x + x, gc.y + y).catch(() => { });
+		}
+		gc.socket.on("hit", callback);
+	}
+
+	public get_attack_filter(): GetEntityFilters {
+		return {
+			typeList: this.targets, canDamage: true, canWalkTo: true,
+			couldGiveCredit: (this.gc().map === "goobrawl") ? undefined : true,
+			returnNearest: true,
+			willBurnToDeath: false, willDieToProjectiles: false
+		};
 	}
 }

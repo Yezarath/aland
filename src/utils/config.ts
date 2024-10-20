@@ -24,7 +24,7 @@ class __Config {
 		this.set_config<boolean>("printing_loots", true);
 		this.set_config<boolean>("printing_gold", false);
 		this.set_config<MonsterName[]>("targets", [
-			"minimush"
+			"minimush", "mrpumpkin", "mrgreen", "phoenix"
 		]);
 		this.set_config<MonsterName[]>("allowed_hunt_ids", [
 			"osnake", "snake", "bee", "goo", "armadillo", "minimush", "rat"

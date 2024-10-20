@@ -1,4 +1,4 @@
-import { GetEntityFilters, Tools } from "alclient";
+import { Tools } from "alclient";
 import { Bot } from "../classes/bot.js";
 
 
@@ -11,22 +11,17 @@ export async function target<T extends Bot>(self: T, timeout: number): Promise<n
 	// if the old_target is still in range, return
 	const target = gc.getTargetEntity();
 	if (target && self.targets.includes(target.type))
-		if (Tools.distance(gc, target) <= gc.range)
-			return timeout;
+		if (!target.willDieToProjectiles(gc, gc.projectiles, gc.players, gc.entities))
+			if (Tools.distance(gc, target) <= gc.range)
+				return timeout;
 	// if the target is attacking a party member, return
-	if (target?.isAttackingPartyMember(gc))
-		return timeout;
+	if (target?.isAttackingPartyMember(gc)) return timeout;
 
-	const filter: GetEntityFilters = {
-		typeList: self.targets, canDamage: true, canWalkTo: true,
-		couldGiveCredit: true, returnNearest: true,
-		willBurnToDeath: false, willDieToProjectiles: false
-	};
-
+	const filter = self.get_attack_filter();
 	// Get a new target
 	const new_target = gc.getEntity({
 		...filter, targetingPartyMember: true,
-		withinRange: gc.range
+		withinRange: gc.range * 1.5
 	}) ?? gc.getEntity(filter);
 
 	// if no entity found, return
