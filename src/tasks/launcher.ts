@@ -8,10 +8,10 @@ interface TaskLauncher<T extends Bot> {
 function get_timeout_name(
 	task: <T extends Bot>(self: T, timeout: number) => Promise<number>
 ): string {
-	return `tstart_${task.name}`;
+	return `task_${task.name}`;
 }
 
-export async function start<T extends Bot>(
+export function start<T extends Bot>(
 	task: <T extends Bot>(self: T, timeout: number) => Promise<number>,
 	self: T,
 	default_timeout: number
@@ -23,6 +23,8 @@ export async function start<T extends Bot>(
 		)
 	};
 	const task_launcher: TaskLauncher<T> = async (self: T, task_launcher_fn: TaskLauncher<T>) => {
+		const timeout = self.gc().timeouts.get(timeout_name);
+		clearTimeout(timeout);
 		self.gc().timeouts.delete(timeout_name);
 		// If the bot is idle or the socket is disconnected, reschedule the task.
 		if (self.is_mode(BotMode.Idle) || self.gc().socket.disconnected)
@@ -35,8 +37,8 @@ export async function start<T extends Bot>(
 			time_fn(task_launcher_fn, default_timeout)
 		});
 	};
-	// Start the first task after 1s.
-	time_fn(task_launcher, 1000);
+	// Start the first task after 4s.
+	time_fn(task_launcher, 4000);
 }
 
 export function stop<T extends Bot>(
@@ -44,8 +46,9 @@ export function stop<T extends Bot>(
 	self: T
 ) {
 	const timeout_name = get_timeout_name(task);
+	const timeout = self.gc().timeouts.get(timeout_name);
 	self.gc().timeouts.delete(timeout_name);
-	clearTimeout(timeout_name);
+	clearTimeout(timeout);
 }
 
 export async function restart<T extends Bot>(
@@ -54,7 +57,7 @@ export async function restart<T extends Bot>(
 	default_timeout: number
 ) {
 	stop<T>(task, self);
-	await start<T>(task, self, default_timeout);
+	start<T>(task, self, default_timeout);
 }
 
 export default { start, stop, restart };

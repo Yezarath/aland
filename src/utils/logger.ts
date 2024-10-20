@@ -8,6 +8,7 @@ export enum LogLevel {
 	INFO = 'INFO',
 	WARNING = 'WARNING',
 	ERROR = 'ERROR',
+	DEBUG = 'DEBUG',
 	LOOT = 'LOOT',
 	GOLD = 'GOLD',
 }
@@ -17,6 +18,7 @@ function get_log_color(log_level: LogLevel): string {
 	if (log_level === LogLevel.ERROR) return '\x1b[31m';
 	if (log_level === LogLevel.LOOT) return '\x1b[38;5;46m'; // Green
 	if (log_level === LogLevel.GOLD) return '\x1b[38;5;226m'; // Light yellow
+	if (log_level === LogLevel.DEBUG) return '\x1b[38;5;250m'; // Light grey
 	return '\x1b[34m';
 }
 
@@ -36,7 +38,8 @@ function is_ignored_error(message: string): boolean {
 		/smartMove to .* cancelled \(new smartMove started\)/,
 		/target '\d+' not found/,
 		/We are having some trouble smartMoving/,
-		/acceptPartyInvite timeout/
+		/acceptPartyInvite timeout/,
+		/sendPartyInvite timeout/
 	].some(regex => regex.test(message));
 }
 
@@ -85,6 +88,16 @@ export function log(name: string, message: string, options?: {
 	}
 	const aland_tracker = () => console.log(to_print);
 	aland_tracker();
+}
+
+export function debug(name: string, message: unknown, options?: {
+	bot_type?: BotType;
+}): void {
+	const m = JSON.stringify(message, undefined, 2);
+	log(name, m, {
+		bot_type: options?.bot_type,
+		log_level: LogLevel.DEBUG
+	});
 }
 
 export function error(name: string, message: string, options?: {
@@ -147,4 +160,4 @@ export function override_console() {
 	console_overriden = true;
 }
 
-export default { log, error, warn };
+export default { log, error, warn, debug };

@@ -15,14 +15,10 @@ export class Ranger extends Bot {
 	}
 
 	async run(): Promise<void> {
-		try {
-			await super.run(() => {
-				this.is_leader = true;
-				this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
-				this.mode = BotMode.Attack;
-			});
-		} catch (e) {
-			this.log(e.message, LogLevel.ERROR);
-		}
+		await super.run(() => {
+			this.is_leader = true;
+			this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
+			this.mode = BotMode.Attack;
+		}).catch(e => this.log(e.message, LogLevel.ERROR));
 	}
 }

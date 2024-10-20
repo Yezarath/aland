@@ -19,13 +19,17 @@ export async function party<T extends Bot>(self: T, timeout: number): Promise<nu
 		id !== undefined && id !== self.id && !gc.partyData?.list.includes(id)
 	) as string[];
 
+	let successfull_count = 0;
+
 	await Promise.allSettled(
 		ids.map(id => gc.sendPartyInvite(id))
 	).then(results => results.forEach((result, index) => {
 		if (result.status === "fulfilled") {
+			successfull_count++;
 			self.log(`Invited ${ids[index]} to the party`, LogLevel.WARNING);
 		} else self.log(result.reason.message, LogLevel.ERROR);
 	})).catch(e => self.log(e.message, LogLevel.ERROR));
 
+	if (successfull_count !== ids.length) return timeout * 3;
 	return timeout;
 }

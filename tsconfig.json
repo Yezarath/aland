@@ -10,7 +10,6 @@
 		"resolveJsonModule": true,
 		"allowSyntheticDefaultImports": true,
 		"strict": true,
-		"useUnknownInCatchVariables": false,
 		"skipLibCheck": true,
 		"sourceMap": true
 	},

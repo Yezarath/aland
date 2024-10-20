@@ -15,14 +15,9 @@ export class Mage extends Bot {
 	}
 
 	async run(): Promise<void> {
-		try {
-			await super.run(() => {
-				this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
-				this.mode = BotMode.Attack;
-				// this.set_attack_loop(10);
-			});
-		} catch (e) {
-			this.log(e.message, LogLevel.ERROR);
-		}
+		await super.run(() => {
+			this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
+			this.mode = BotMode.Attack;
+		}).catch(e => this.log(e.message, LogLevel.ERROR));
 	}
 }

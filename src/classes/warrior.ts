@@ -15,13 +15,9 @@ export class Warrior extends Bot {
 	}
 
 	async run(): Promise<void> {
-		try {
-			await super.run(() => {
-				this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
-				this.mode = BotMode.Attack;
-			});
-		} catch (e) {
-			this.log(e.message, LogLevel.ERROR);
-		}
+		await super.run(() => {
+			this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
+			this.mode = BotMode.Attack;
+		}).catch(e => this.log(e.message, LogLevel.ERROR));
 	}
 }

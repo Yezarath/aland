@@ -1,5 +1,6 @@
 import AL, {
 	PingCompensatedCharacter as GameCharacter,
+	LimitDCReportData,
 	MonsterName,
 	ServerIdentifier, ServerRegion
 } from 'alclient';
@@ -26,55 +27,52 @@ export enum BotType {
 }
 
 export abstract class Bot {
-	#id: string;
+	//#region Private Fields
+	readonly #id: string;
+	readonly #bot_type: BotType;
 	#server_region: ServerRegion | undefined;
 	#server_identifier: ServerIdentifier | undefined;
-	#bot_type: BotType;
 	#gc!: GameCharacter;
-
-	is_started = false;
 	#mode = BotMode.Idle;
 	#targets: MonsterName[];
-	#is_leader: boolean = false;
+	#should_stop: boolean;
+	#is_leader: boolean;
+	//#endregion
 
-	constructor(
-		id: string,
-		bot_type: BotType
-	) {
-		this.#is_leader = false;
+	//#region Public Fields
+	is_started: boolean;
+	//#endregion
+
+	//#region Getters and Setters
+	get id(): string { return this.#id }
+
+	set mode(mode: BotMode) { this.#mode = mode }
+	get mode(): BotMode { return this.#mode }
+	public is_mode(mode: BotMode): boolean { return (this.mode === mode) }
+
+	get is_leader(): boolean { return this.#is_leader }
+	set is_leader(is_leader: boolean) { this.#is_leader = is_leader }
+
+	get should_stop(): boolean { return this.#should_stop }
+	set should_stop(should_stop: boolean) { this.#should_stop = should_stop }
+
+	get targets(): MonsterName[] { return this.#targets }
+	set targets(targets: MonsterName[]) { this.#targets = targets }
+
+	public gc(): GameCharacter {
+		if (this.#gc === undefined) throw new Error(`Character ${this.#id} not started!`);
+		return this.#gc;
+	}
+	//#endregion
+
+	constructor(id: string, bot_type: BotType) {
 		this.#id = id;
 		this.#bot_type = bot_type;
 		this.#mode = BotMode.Idle;
 		this.#targets = [];
-	}
-
-	public gc(): GameCharacter {
-		if (this.#gc === undefined)
-			throw new Error(`Character ${this.#id} not started!`);
-		return this.#gc;
-	}
-
-	public async start_character(
-		sr: ServerRegion,
-		sid: ServerIdentifier
-	): Promise<void> {
-		if (this.is_started)
-			throw new Error(`Character ${this.#id} already started!`);
-		try {
-			this.#gc = await AL.Game.startCharacter(this.#id, sr, sid);
-			this.#server_region = sr;
-			this.#server_identifier = sid;
-			this.#targets = [];
-			this.log('Connected!');
-		} catch (e) {
-			const mod_msg = e.message.replace("Failed to connect: ", "");
-			this.log(mod_msg, LogLevel.ERROR);
-			throw new Error(`Failed to start character ${this.#id}!`);
-		}
-		this.is_started = true;
-		this.gc().socket.on("disconnect", () => {
-			this.log("Disconnected!", LogLevel.WARNING);
-		});
+		this.#should_stop = false;
+		this.#is_leader = false;
+		this.is_started = false;
 	}
 
 	public log(message: string, log_level?: LogLevel): void {
@@ -84,110 +82,102 @@ export abstract class Bot {
 		});
 	}
 
-	get id(): string {
-		return this.#id;
-	}
-
-	public is_mode(mode: BotMode): boolean {
-		return (this.mode === mode);
-	}
-
-	set mode(mode: BotMode) {
-		this.#mode = mode;
-	}
-
-	get mode(): BotMode {
-		return this.#mode;
-	}
-
-	get is_leader(): boolean {
-		return this.#is_leader;
-	}
-
-	set is_leader(is_pleader: boolean) {
-		this.#is_leader = is_pleader;
-	}
-
-	get targets(): MonsterName[] {
-		return this.#targets;
-	}
-
-	set targets(targets: MonsterName[]) {
-		this.#targets = targets;
+	public async start_character(
+		sr: ServerRegion,
+		sid: ServerIdentifier
+	): Promise<void> {
+		if (this.is_started)
+			throw new Error(`Character ${this.#id} already started!`);
+		this.#gc = await AL.Game.startCharacter(this.#id, sr, sid).catch(e => {
+			e.message = e.message.replace("Failed to connect: Failed: ", "");
+			this.log(`[START] ~ ${e.message}`, LogLevel.ERROR);
+			throw new Error(`Failed to start character '${this.#id}`);
+		});
+		this.is_started = true;
+		this.#server_region = sr;
+		this.#server_identifier = sid;
+		this.#targets = [];
+		this.log('Connected!');
 	}
 
 	private async restart(): Promise<void> {
-		this.gc().disconnect();
-
 		if (this.#server_region === undefined || this.#server_identifier === undefined)
 			throw new Error("Server region or identifier not set!");
-
-		await this.start_character(
-			this.#server_region, this.#server_identifier
-		);
-	}
-
-	protected async run(bot_config: () => void): Promise<void> {
 		if (!this.is_started)
 			throw new Error(`Character ${this.#id} not started!`);
-		let stop: boolean = false;
 
-		const dc = () => { this.gc().disconnect(); stop = true };
+		this.is_started = false;
+		this.gc().disconnect();
+
+		if (this.should_stop) return;
+
+		let retry_count = 0;
+		this.log("Reconnecting...", LogLevel.WARNING);
+		// Maybe Move this in a task, endless reconnecting needed, one every 15s.
+		while (retry_count < 30 && !this.is_started && this.gc().socket.disconnected) {
+			try {
+				await this.start_character(this.#server_region, this.#server_identifier);
+			} catch {
+				if (retry_count++ >= 30)
+					this.log("Failed to reconnect after 30 retry!", LogLevel.ERROR);
+				else await sleep(15_000);
+			}
+		}
+	}
+
+	protected async run(child_config: () => void): Promise<void> {
+		if (!this.is_started)
+			throw new Error(`Character ${this.#id} not started!`);
+
+		while (this.is_started) {
+			child_config();
+
+			// Start the tasks
+			if (this.is_leader)
+				TaskLauncher.start(Task.party, this, Task.Constants.Timeouts.PARTY);
+			else this.on_invite(); // Listener for party invite, might find a way to link that to a task.
+			if (this.#bot_type !== BotType.Merchant) {
+				TaskLauncher.start(Task.move, this, Task.Constants.Timeouts.MOVE);
+				TaskLauncher.start(Task.attack, this, Task.Constants.Timeouts.ATTACK);
+				TaskLauncher.start(Task.target, this, Task.Constants.Timeouts.TARGET);
+				TaskLauncher.start(Task.hunt_start, this, Task.Constants.Timeouts.HUNT_START);
+			}
+			TaskLauncher.start(Task.potion, this, Task.Constants.Timeouts.POTION);
+			TaskLauncher.start(Task.loot, this, Task.Constants.Timeouts.LOOT);
+			TaskLauncher.start(Task.respawn, this, Task.Constants.Timeouts.RESPAWN);
+			this.on_disconnect();
+
+			// For debug purposes :
+			this.gc().socket.on("limitdcreport", (data: LimitDCReportData) => {
+				Logger.debug("DEBUG", data);
+			});
+
+
+			while (this.gc().socket.connected && !this.should_stop) await sleep(150);
+			await this.restart();
+		}
+		this.log("Exiting...", LogLevel.WARNING);
+	}
+
+	protected on_disconnect(): void {
+		const dc = () => {
+			this.gc().disconnect();
+			this.should_stop = true;
+		};
 
 		process.on("SIGINT", dc);
 		process.on("SIGQUIT", dc);
 		process.on("SIGTERM", dc);
 		process.on("exit", dc);
 
-		const gc = this.gc();
-		do {
-			bot_config();
-			if (this.#bot_type !== BotType.Merchant) {
-				TaskLauncher.start(Task.move, this, Task.Constants.Timeouts.MOVE);
-				TaskLauncher.start(Task.attack, this, Task.Constants.Timeouts.ATTACK);
-				TaskLauncher.start(Task.target, this, Task.Constants.Timeouts.TARGET);
-			}
-			TaskLauncher.start(Task.potion, this, Task.Constants.Timeouts.POTION);
-			TaskLauncher.start(Task.loot, this, Task.Constants.Timeouts.LOOT);
-			TaskLauncher.start(Task.mhunt_start, this, Task.Constants.Timeouts.MHUNT_START);
-			if (this.is_leader)
-				TaskLauncher.start(Task.party, this, Task.Constants.Timeouts.PARTY);
-			else
-				this.on_invite();
+		this.gc().socket.on("disconnect", (reason) => {
+			this.log(`Disconnected for '${reason}'!`, LogLevel.ERROR);
 
-			// Move to a task ? Maybe not
-			while (gc.socket.connected) {
-				if (gc.rip) {
-					this.log("Died !", LogLevel.WARNING);
-					// I often get a respwan timeout (1000ms) there
-					await sleep(12_000);
-					await gc.respawn().then(() => {
-						this.log("Respawned !", LogLevel.WARNING);
-					}).catch(e => {
-						this.log(e.message, LogLevel.ERROR);
-					});
-				}
-				await sleep(150);
-			}
-
-			// process.removeListener("SIGINT", dc);
-			// process.removeListener("SIGQUIT", dc);
-			// process.removeListener("SIGTERM", dc);
-			// process.removeListener("exit", dc);
-
-			this.is_started = false;
-			let retry_count = 0;
-			while (!this.is_started && !stop && retry_count < 5) {
-				this.log("Reconnecting...", LogLevel.WARNING);
-				await this.restart().catch(() => {
-					if (retry_count++ >= 5)
-						this.log("Failed to reconnect after 5 retry!",
-							LogLevel.ERROR
-						);
-				});
-			}
-		} while (this.is_started);
-		this.log("Exiting...", LogLevel.WARNING);
+			process.removeListener("SIGINT", dc);
+			process.removeListener("SIGQUIT", dc);
+			process.removeListener("SIGTERM", dc);
+			process.removeListener("exit", dc);
+		});
 	}
 
 	protected on_invite(): void {
@@ -223,6 +213,6 @@ export abstract class Bot {
 				this.log(`Joined '${data.name}' party`, LogLevel.WARNING);
 			}
 		};
-		gc.socket.once("invite", on_invite_run);
+		gc.socket.on("invite", on_invite_run);
 	}
 }

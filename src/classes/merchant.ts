@@ -14,10 +14,8 @@ export class Merchant extends Bot {
 	}
 
 	async run(): Promise<void> {
-		try {
-			await super.run(() => { });
-		} catch (e) {
-			this.log(e.message, LogLevel.ERROR);
-		}
+		await super.run(() => {
+
+		}).catch(e => this.log(e.message, LogLevel.ERROR));
 	}
 }

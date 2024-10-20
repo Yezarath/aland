@@ -24,11 +24,11 @@ class __Config {
 		this.set_config<boolean>("printing_loots", true);
 		this.set_config<boolean>("printing_gold", false);
 		this.set_config<MonsterName[]>("targets", [
-			"osnake", "snake"
+			"minimush"
 		]);
 		this.set_config<MonsterName[]>("allowed_hunt_ids", [
-			"osnake", "snake", "bee", "goo", "armadillo", "minimush"
-		])
+			"osnake", "snake", "bee", "goo", "armadillo", "minimush", "rat"
+		]);
 	}
 
 	static init() {
@@ -49,11 +49,11 @@ class __Config {
 				JSON.stringify(__Config.#config, null, 2)
 			);
 		} else {
-			const fc = fs.readFileSync(config_path, 'utf-8');
-			try {
+			new Promise<void>((resolve, reject) => {
+				const fc = fs.readFileSync(config_path, 'utf-8');
 				const cfg = JSON.parse(fc);
 				if (typeof cfg !== 'object' || cfg === null) {
-					throw new Error("Invalid config file");
+					reject(new Error("Invalid config file"));
 				}
 				for (const key in cfg) {
 					if (!(key in __Config.#config)) {
@@ -70,9 +70,8 @@ class __Config {
 					}
 				}
 				__Config.#config = cfg;
-			} catch (e) {
-				throw new Error("Error loading config file: " + e.message);
-			}
+				resolve();
+			}).catch(e => { throw new Error("Error loading config file: " + e.message) });
 		}
 		Logger.log("Config", "Config loaded!");
 	}

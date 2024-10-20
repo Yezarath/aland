@@ -1,6 +1,5 @@
 import AL, { ServerIdentifier, ServerRegion } from "alclient";
 import { Mage } from "./classes/mage.js";
-import { Merchant } from "./classes/merchant.js";
 import { Ranger } from "./classes/ranger.js";
 import { Warrior } from "./classes/warrior.js";
 import Config from "./utils/config.js";
@@ -8,22 +7,23 @@ import * as Logger from "./utils/logger.js";
 
 async function run() {
 	Logger.override_console();
-	try {
-		Config.load_config();
+	Config.load_config();
+	await new Promise<void>(async (resolve, reject) => {
 		await Promise.all([
 			AL.Game.loginJSONFile("credentials.json"),
 			AL.Game.getGData(true, true)
-		]);
+		]).catch(reject);
 		Logger.log("System", "Credentials loaded!");
 		Logger.log("System", "Game data loaded!");
+
 		await AL.Pathfinder.prepare(AL.Game.G, {
 			remove_abtesting: true, remove_test: true, cheat: true,
 			remove_bank_b: true, remove_bank_u: true
-		});
+		}).catch(reject);
 		Logger.log("System", "Pathfinder ready!");
 
 		const characters = [
-			new Merchant(Config.get_config<string>("merchant_id")),
+			// new Merchant(Config.get_config<string>("merchant_id")),
 			new Warrior(Config.get_config<string>("warrior_id")),
 			new Mage(Config.get_config<string>("mage_id")),
 			new Ranger(Config.get_config<string>("ranger_id"))
@@ -34,20 +34,17 @@ async function run() {
 				Config.get_config<ServerRegion>("server_region") ?? "EU",
 				Config.get_config<ServerIdentifier>("server_identifier") ?? "I"
 			);
-		}));
+		})).catch(reject);
 		// Run all characters
 		await Promise.allSettled(characters.map(async character => {
 			return character.run();
-		}));
-		Logger.log("System", "Script finished!");
-	} catch (e) {
-		Logger.error("System", e.message);
-	}
-}
+		})).catch(reject);
+		Logger.log("System", "Script finished normally!");
 
-run().then(() => {
-	process.exit(0);
-}).catch(() => { });
+		resolve();
+	}).catch(e => Logger.error("System", e.message));
+}
+run().then(() => { process.exit(0) });
 
 
 /**

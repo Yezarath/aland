@@ -6,11 +6,9 @@ export async function loot<T extends Bot>(self: T, timeout: number): Promise<num
 	const gc = self.gc();
 	if (gc.chests.size === 0) return timeout;
 
-	const free_slots = gc.items.filter(i => i === null).length;
 	for (const [, chest] of gc.chests) {
-
 		// if we don't have enough slots, skip the chest
-		if (free_slots - chest.items < 0) continue;
+		if (gc.esize - chest.items < 0) continue;
 
 		// open the chest
 		const content = await gc.openChest(chest.id) as ChestLootData;
