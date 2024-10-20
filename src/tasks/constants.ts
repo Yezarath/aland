@@ -9,8 +9,8 @@ export const Constants = {
 		HUNT_START: 1000,
 		HUNT_OFFSET: 50000,
 		HUNT_FINISH: 1000,
-		MLUCK: 1000,
-		MSTAND: 400,
+		MLUCK: 200,
+		MSTAND: 1000,
 		PARTY: 10000,
 		RESPAWN: 3000
 	}

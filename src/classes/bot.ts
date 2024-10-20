@@ -12,7 +12,8 @@ import { sleep } from '../utils/sleep.js';
 
 export enum BotMode {
 	Idle,
-	Attack
+	Attack = 1,
+	Sulking
 }
 
 export enum BotType {
@@ -58,6 +59,8 @@ export abstract class Bot {
 
 	get targets(): MonsterName[] { return this.#targets }
 	set targets(targets: MonsterName[]) { this.#targets = targets }
+
+	get bot_type(): BotType { return this.#bot_type }
 
 	public gc(): GameCharacter {
 		if (this.#gc === undefined) throw new Error(`Character ${this.#id} not started!`);
@@ -141,6 +144,8 @@ export abstract class Bot {
 				TaskLauncher.start(Task.attack, this, Task.Constants.Timeouts.ATTACK);
 				TaskLauncher.start(Task.target, this, Task.Constants.Timeouts.TARGET);
 				TaskLauncher.start(Task.hunt_start, this, Task.Constants.Timeouts.HUNT_START);
+			} else {
+				TaskLauncher.start(Task.mstand, this, Task.Constants.Timeouts.MSTAND);
 			}
 			TaskLauncher.start(Task.potion, this, Task.Constants.Timeouts.POTION);
 			TaskLauncher.start(Task.loot, this, Task.Constants.Timeouts.LOOT);

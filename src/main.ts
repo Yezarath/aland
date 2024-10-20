@@ -1,5 +1,6 @@
 import AL, { ServerIdentifier, ServerRegion } from "alclient";
 import { Mage } from "./classes/mage.js";
+import { Merchant } from "./classes/merchant.js";
 import { Ranger } from "./classes/ranger.js";
 import { Warrior } from "./classes/warrior.js";
 import Config from "./utils/config.js";
@@ -23,18 +24,25 @@ async function run() {
 		Logger.log("System", "Pathfinder ready!");
 
 		const characters = [
-			// new Merchant(Config.get_config<string>("merchant_id")),
+			new Merchant(Config.get_config<string>("merchant_id")),
 			new Warrior(Config.get_config<string>("warrior_id")),
 			new Mage(Config.get_config<string>("mage_id")),
 			new Ranger(Config.get_config<string>("ranger_id"))
 		];
 		// Start all characters
-		await Promise.all(characters.map(async character => {
+		await Promise.allSettled(characters.map(async character => {
 			return character.start_character(
 				Config.get_config<ServerRegion>("server_region") ?? "EU",
 				Config.get_config<ServerIdentifier>("server_identifier") ?? "I"
 			);
-		})).catch(reject);
+		})).then(results => results.forEach((result, index) => {
+			if (result.status === "rejected") {
+				Logger.error("System", result.reason.message);
+				delete characters[index];
+			}
+		})).finally(() => {
+			if (characters.length === 0) reject(new Error("No characters were started!"));
+		});
 		// Run all characters
 		await Promise.allSettled(characters.map(async character => {
 			return character.run();
