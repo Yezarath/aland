@@ -1,11 +1,12 @@
 import { Tools } from "alclient";
-import { Bot } from "../classes/bot.js";
+import { Bot, BotState } from "../classes/bot.js";
 
 
 export async function target<T extends Bot>(self: T, timeout: number): Promise<number> {
 	const gc = self.gc();
 
 	// if no targets to hunt, or we're dead, return
+	if (!self.is_state(BotState.ATTACKING)) return timeout;
 	if (self.targets.length === 0 || gc.rip) return timeout;
 
 	// if the old_target is still in range, return

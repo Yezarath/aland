@@ -10,6 +10,7 @@ export enum LogLevel {
 	WARNING = 'WARNING',
 	ERROR = 'ERROR',
 	DEBUG = 'DEBUG',
+	EVENT = 'EVENT',
 	LOOT = 'LOOT',
 	GOLD = 'GOLD',
 }
@@ -20,7 +21,8 @@ function get_log_color(log_level: LogLevel): string {
 	if (log_level === LogLevel.LOOT) return '\x1b[38;5;46m'; // Green
 	if (log_level === LogLevel.GOLD) return '\x1b[38;5;226m'; // Light yellow
 	if (log_level === LogLevel.DEBUG) return '\x1b[38;5;250m'; // Light grey
-	return '\x1b[34m';
+	if (log_level === LogLevel.EVENT) return '\x1b[38;2;250;179;135m'; // rgb(250, 179, 135)
+	/**(log_level === LogLevel.Info)**/return '\x1b[34m';
 }
 
 function get_class_color(bot_type: BotType): string {
@@ -31,7 +33,7 @@ function get_class_color(bot_type: BotType): string {
 	if (bot_type === BotType.Mage) return '\x1b[2m\x1b[34m';
 	if (bot_type === BotType.Rogue) return '\x1b[1m\x1b[33m';
 	if (bot_type === BotType.Paladin) return '\x1b[1m\x1b[35m';
-	return '\x1b[1m\x1b[90m';
+	/**(bot_type === BotType.System)**/return '\x1b[1m\x1b[90m';
 }
 
 export type LogMessage = string | { message: string, data: unknown };
@@ -42,9 +44,10 @@ function is_ignored_error(message: LogMessage): boolean {
 	return [
 		/smartMove to .* cancelled \(new smartMove started\)/,
 		/target '\d+' not found/,
-		/We are having some trouble smartMoving/,
+		// /We are having some trouble smartMoving/,
 		/acceptPartyInvite timeout/,
-		/sendPartyInvite timeout/
+		/sendPartyInvite timeout/,
+		/'attack' failed \(too far\) \(dist: undefined\)/,
 	].some(regex => regex.test(message));
 }
 

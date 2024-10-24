@@ -3,24 +3,26 @@ import { BotMage } from "./classes/mage.js";
 import { BotMerchant } from "./classes/merchant.js";
 import { BotRanger } from "./classes/ranger.js";
 import { BotWarrior } from "./classes/warrior.js";
+import CaughtPromise from "./utils/caught_promise.js";
 import Config from "./utils/config.js";
 import * as Logger from "./utils/logger.js";
 
 async function run() {
 	Logger.override_console();
 	Config.load_config();
-	await new Promise<void>(async (resolve, reject) => {
+	await CaughtPromise(async () => {
 		await Promise.all([
-			AL.Game.loginJSONFile("credentials.json"),
+			AL.Game.loginJSONFile("credentials.json", false),
 			AL.Game.getGData(true, true)
-		]).catch(reject);
+		]);
 		Logger.log("System", "Credentials loaded!");
 		Logger.log("System", "Game data loaded!");
 
 		await AL.Pathfinder.prepare(AL.Game.G, {
 			remove_abtesting: true, remove_test: true, cheat: true,
 			remove_bank_b: true, remove_bank_u: true
-		}).catch(reject);
+		});
+
 		Logger.log("System", "Pathfinder ready!");
 
 		const characters = [
@@ -41,15 +43,13 @@ async function run() {
 				delete characters[index];
 			}
 		})).finally(() => {
-			if (characters.length === 0) reject(new Error("No characters were started!"));
+			if (characters.length === 0) new Error("No characters were started!");
 		});
 		// Run all characters
 		await Promise.allSettled(characters.map(async character => {
 			return character.run();
-		})).catch(reject);
+		}));
 		Logger.log("System", "Script finished normally!");
-
-		resolve();
 	}).catch(e => Logger.error("System", e.message));
 }
 run().then(() => { process.exit(0) });

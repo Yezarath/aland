@@ -21,14 +21,15 @@ export async function mluck<T extends Bot>(self: T, timeout: number): Promise<nu
 	};
 
 	const apply = async (character: Player | Character): Promise<void> => {
-		if (gc.isOnCooldown("mluck")) await sleep(gc.getCooldown("mluck"));
 		await gc.mluck(character.id).catch(() => { });
+		await sleep(gc.getCooldown("mluck") + gc.ping);
 	};
 
 	const gc = self.gc<Merchant>();
-	gc.getPlayers({ isDead: false, withinRange: "mluck", isNPC: false })
-		.filter(filter_fn)
-		.forEach(async character => apply(character));
+	const to_buff = gc.getPlayers({ isDead: false, withinRange: "mluck", isNPC: false })
+		.filter(filter_fn);
+	// .slice(0, 5) // maximum of 5 buffs per rotation, cost 20mp each, 100mp total in 1s.
+	for (const player of to_buff) await apply(player);
 	if (filter_fn(gc)) await apply(gc);
-	return timeout;
+	return timeout + gc.ping;
 }

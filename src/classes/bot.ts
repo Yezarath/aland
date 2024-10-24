@@ -9,13 +9,22 @@ import AL, {
 import TaskLauncher from '../tasks/launcher.js';
 import Task from '../tasks/task.js';
 import Config from '../utils/config.js';
+import { ItemsManagement } from '../utils/items_management.js';
 import Logger, { LogLevel, LogMessage } from "../utils/logger.js";
 import { sleep } from '../utils/sleep.js';
 
 export enum BotMode {
 	Idle,
-	Attack,
-	Sulking
+	Running
+}
+
+export enum BotState {
+	NONE,
+	ATTACKING,
+	REFILL,
+	TAKE_QUEST,
+	END_QUEST,
+	SELLING
 }
 
 export enum BotType {
@@ -30,19 +39,24 @@ export enum BotType {
 }
 
 export abstract class Bot {
+	//#region Static Fields
+	static #bots: Bot[] = [];
+	//#endregion
 	//#region Private Fields
 	readonly #id: string;
 	readonly #bot_type: BotType;
 	#server_region: ServerRegion | undefined;
 	#server_identifier: ServerIdentifier | undefined;
 	#gc!: GameCharacter;
-	#mode = BotMode.Idle;
+	#mode: BotMode;
+	#state: BotState;
 	#targets: MonsterName[];
 	#should_stop: boolean;
 	#is_leader: boolean;
 	//#endregion
 
 	//#region Public Fields
+	iconfig: ItemsManagement;
 	is_started: boolean;
 	//#endregion
 
@@ -52,6 +66,10 @@ export abstract class Bot {
 	set mode(mode: BotMode) { this.#mode = mode }
 	get mode(): BotMode { return this.#mode }
 	public is_mode(mode: BotMode): boolean { return (this.mode === mode) }
+
+	set state(state: BotState) { this.#state = state }
+	get state(): BotState { return this.#state }
+	public is_state(state: BotState): boolean { return (this.state === state) }
 
 	get is_leader(): boolean { return this.#is_leader }
 	set is_leader(is_leader: boolean) { this.#is_leader = is_leader }
@@ -64,6 +82,8 @@ export abstract class Bot {
 
 	get bot_type(): BotType { return this.#bot_type }
 
+	get bots(): Bot[] { return Bot.#bots }
+
 	public gc<T extends GameCharacter>(): T {
 		if (this.#gc === undefined) throw new Error(`Character ${this.#id} not started!`);
 		return this.#gc as T;
@@ -74,10 +94,13 @@ export abstract class Bot {
 		this.#id = id;
 		this.#bot_type = bot_type;
 		this.#mode = BotMode.Idle;
+		this.#state = BotState.NONE;
 		this.#targets = [];
 		this.#should_stop = false;
 		this.#is_leader = false;
 		this.is_started = false;
+		this.iconfig = new ItemsManagement(this);
+		Bot.#bots.push(this);
 	}
 
 	public log(message: LogMessage, log_level?: LogLevel): void {
@@ -153,6 +176,8 @@ export abstract class Bot {
 				TaskLauncher.start(Task.mstand, this, Task.Constants.Timeouts.MSTAND);
 				TaskLauncher.start(Task.mluck, this, Task.Constants.Timeouts.MLUCK);
 			}
+			TaskLauncher.start(Task.items, this, Task.Constants.Timeouts.SELLING);
+			TaskLauncher.start(Task.refill, this, Task.Constants.Timeouts.REFILL);
 			TaskLauncher.start(Task.potion, this, Task.Constants.Timeouts.POTION);
 			TaskLauncher.start(Task.loot, this, Task.Constants.Timeouts.LOOT);
 			TaskLauncher.start(Task.respawn, this, Task.Constants.Timeouts.RESPAWN);
@@ -165,7 +190,6 @@ export abstract class Bot {
 					data: data
 				});
 			});
-
 
 			while (this.gc().socket.connected && !this.should_stop) await sleep(150);
 			await this.restart();
@@ -224,7 +248,7 @@ export abstract class Bot {
 							} else await sleep(1000);
 						});
 				}
-				this.log(`Joined '${data.name}' party`, LogLevel.WARNING);
+				this.log(`Joined '${data.name}' party`, LogLevel.EVENT);
 			}
 		};
 		gc.socket.on("invite", callback);

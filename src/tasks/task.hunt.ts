@@ -1,7 +1,9 @@
 import { MonsterName } from "alclient";
-import { Bot, BotMode } from "../classes/bot.js";
+import { Bot, BotState } from "../classes/bot.js";
+import CaughtPromise from "../utils/caught_promise.js";
 import Config from "../utils/config.js";
 import { LogLevel } from "../utils/logger.js";
+import { sleep } from "../utils/sleep.js";
 import TaskLauncher from "./launcher.js";
 import Task from "./task.js";
 
@@ -16,33 +18,32 @@ export async function hunt_start<T extends Bot>(self: T, timeout: number): Promi
 		// -- Find someway to avoid it.
 
 		// Check if the monsterhunt is allowed.
-		self.log(`Quest target is '${gc.s.monsterhunt.id}'`, LogLevel.INFO);
+		self.log(`Quest target is '${gc.s.monsterhunt.id}'`, LogLevel.EVENT);
 		if (ids.includes(gc.s.monsterhunt.id)) {
 			self.log({
 				message: 'ID allowed, Monster hunt started!',
 				data: { duration: gc.s.monsterhunt.ms, quantity: gc.s.monsterhunt.c }
-			}, LogLevel.WARNING);
+			}, LogLevel.EVENT);
 			self.targets = [gc.s.monsterhunt.id];
 			TaskLauncher.restart(hunt_finish, self, Task.Constants.Timeouts.HUNT_FINISH);
-		} else self.log("ID not allowed, Monster hunt ignored!", LogLevel.INFO);
+		} else self.log("ID not allowed, Monster hunt ignored!", LogLevel.EVENT);
 		return gc.s.monsterhunt.ms + gc.ping + Task.Constants.Timeouts.HUNT_OFFSET;
 	}
 	// Go and take the monsterhunt quest.
-	const mode = self.mode;
-	self.mode = BotMode.Idle;
+	if (!self.is_state(BotState.ATTACKING)) return timeout;
 
-	await new Promise<void>(async (resolve, reject) => {
-		self.log("On the way to start a quest", LogLevel.INFO);
-		TaskLauncher.stop(Task.move, self);
-		if (gc.smartMoving) await gc.stopSmartMove().catch(reject);
-		await gc.smartMove("monsterhunter").catch(reject);
-		await gc.getMonsterHuntQuest().catch(reject);
-		resolve();
-	}).catch(e => { throw new Error(e.message) }).finally(() => {
-		self.mode = mode;
-		TaskLauncher.restart(Task.move, self, Task.Constants.Timeouts.MOVE);
+	const state = self.state;
+	self.state = BotState.TAKE_QUEST;
+	await CaughtPromise(async () => {
+		if (gc.smartMoving) await gc.stopSmartMove();
+		await gc.smartMove("monsterhunter");
+		await gc.getMonsterHuntQuest();
+		self.log("Monster hunt quest taken!", LogLevel.EVENT);
+	}).catch(e => { throw new Error(e.message) }).finally(async () => {
+		await sleep(Task.Constants.Timeouts.STATE_RELEASE);
+		self.state = state;
 	});
-	return timeout;
+	return timeout + gc.ping;
 }
 
 export async function hunt_finish<T extends Bot>(self: T, timeout: number): Promise<number> {
@@ -53,23 +54,22 @@ export async function hunt_finish<T extends Bot>(self: T, timeout: number): Prom
 	const mhunt = gc.s.monsterhunt;
 	if (mhunt === undefined || mhunt.c !== 0) return timeout;
 
-	const mode = self.mode;
+	if (!self.is_state(BotState.ATTACKING)) return timeout;
 
-	await new Promise<void>(async (resolve, reject) => {
-		self.mode = BotMode.Idle;
-		TaskLauncher.stop(Task.move, self);
-		if (gc.smartMoving) await gc.stopSmartMove().catch(reject);
-		await gc.smartMove("monsterhunter").catch(reject);
-		await gc.finishMonsterHuntQuest().catch(reject);
+	const state = self.state;
+	self.state = BotState.END_QUEST;
+	await CaughtPromise(async () => {
+		if (gc.smartMoving) await gc.stopSmartMove();
+		await gc.smartMove("monsterhunter");
+		await gc.finishMonsterHuntQuest();
 
-		self.log("Monster hunt completed!", LogLevel.INFO);
+		self.log("Monster hunt completed!", LogLevel.EVENT);
 		TaskLauncher.restart(hunt_start, self, Task.Constants.Timeouts.HUNT_START);
 		timeout = timeout + Task.Constants.Timeouts.HUNT_OFFSET;
 		self.targets = Config.get_config<MonsterName[]>("targets") ?? [];
-		resolve();
-	}).catch(e => { throw new Error(e.message) }).finally(() => {
-		self.mode = mode;
-		TaskLauncher.restart(Task.move, self, Task.Constants.Timeouts.MOVE);
+	}).catch(e => { throw new Error(e.message) }).finally(async () => {
+		await sleep(Task.Constants.Timeouts.STATE_RELEASE);
+		self.state = state;
 	});
 	return timeout;
 }

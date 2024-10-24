@@ -1,10 +1,11 @@
 import { Tools, Warrior } from "alclient"; // Adjust the import path as necessary
-import { Bot } from "../classes/bot.js";
+import { Bot, BotState } from "../classes/bot.js";
 
 export async function move<T extends Bot>(self: T, timeout: number): Promise<number> {
 	const gc = self.gc();
 
 	// if no targets to hunt, or we're dead, return
+	if (!self.is_state(BotState.ATTACKING)) return timeout;
 	if (self.targets.length === 0 || gc.rip) return timeout;
 
 	const target = gc.getTargetEntity();

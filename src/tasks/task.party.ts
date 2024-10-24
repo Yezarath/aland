@@ -26,7 +26,7 @@ export async function party<T extends Bot>(self: T, timeout: number): Promise<nu
 	).then(results => results.forEach((result, index) => {
 		if (result.status === "fulfilled") {
 			successfull_count++;
-			self.log(`Invited ${ids[index]} to the party`, LogLevel.WARNING);
+			self.log(`Invited '${ids[index]}' to the party`, LogLevel.EVENT);
 		} else self.log(result.reason.message, LogLevel.ERROR);
 	})).catch(e => self.log(e.message, LogLevel.ERROR));
 
