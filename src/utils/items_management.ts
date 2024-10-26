@@ -106,9 +106,6 @@ export class ItemsManagement {
 		this.update_item("phelmet", { should_sell: true }, { storage_place: "none" });
 		this.update_item("gslime", { should_sell: true }, { storage_place: "none" });
 
-		// Maybe temp, need to compund those, they are nice.
-		this.update_item("ringsj", { should_sell: true }, { storage_place: "none" });
-
 		// Set the items to be placed at specific slots in the inventory. Not yet implemented.
 		this.update_item("hpot0", {}, { storage_slot: 41 });
 		this.update_item("mpot0", {}, { storage_slot: 40 });
@@ -116,37 +113,56 @@ export class ItemsManagement {
 
 
 		// Auto Upgrade items =
+		// -- Armors -- T1
 		this.update_item("helmet", { improve_to: 8 });
 		this.update_item("shoes", { improve_to: 8 });
 		this.update_item("pants", { improve_to: 8 });
 		this.update_item("gloves", { improve_to: 8 });
 		this.update_item("coat", { improve_to: 8 });
 
+		// -- Armors -- T1*
 		this.update_item("wattire", { improve_to: 8 });
 		this.update_item("wgloves", { improve_to: 8 });
 		this.update_item("wbreeches", { improve_to: 8 });
 		this.update_item("wshoes", { improve_to: 8 });
 		this.update_item("wcap", { improve_to: 8 });
 
-		this.update_item("wbook0", { improve_to: 4 });
+		// -- Wearpons --
 		this.update_item("bow", { improve_to: 8 });
 		this.update_item("hbow", { improve_to: 7 });
-		this.update_item("quiver", { improve_to: 7 });
 		this.update_item("mushroomstaff", { improve_to: 8 });
 		this.update_item("stinger", { improve_to: 6 });
 
+		// -- Offhands --
+		this.update_item("quiver", { improve_to: 7 });
+		this.update_item("wbook0", { improve_to: 4 });
+
+
+		// Auto Compound items =
+		// -- Amulet --
 		this.update_item("intamulet", { improve_to: 4 });
 		this.update_item("stramulet", { improve_to: 3 });
 		this.update_item("dexamulet", { improve_to: 3 });
 
+		// -- Belt --
 		this.update_item("intbelt", { improve_to: 2 });
 		this.update_item("strbelt", { improve_to: 3 });
 		this.update_item("dexbelt", { improve_to: 3 });
 
-		this.update_item("strearring", { improve_to: 1 });
+		// -- Earrings --
+		this.update_item("strearring", { improve_to: 2 });
 		this.update_item("dexearring", { improve_to: 1 });
 		this.update_item("intearring", { improve_to: 1 });
 
+		// -- Rings --
+		this.update_item("ringsj", { improve_to: 3 });
+		this.update_item("strring", { improve_to: 3 });
+		this.update_item("dexring", { improve_to: 3 });
+		this.update_item("intring", { improve_to: 3 });
+
+		// -- Capes --
+
+		// -- Orbs --
 	}
 
 	public set_item(iname: ItemName, options: ItemOptions, storage: ItemStorage) {
