@@ -1,7 +1,8 @@
 import AL, { ItemData, ItemName } from 'alclient';
-import { Bot, BotState } from '../classes/bot.js';
+import { Bot, BotState, BotType } from '../classes/bot.js';
 import Task from '../tasks/task.js';
 import CaughtPromise from '../utils/caught_promise.js';
+import Items from "../utils/items.js";
 import { LogLevel } from '../utils/logger.js';
 import { sleep } from '../utils/sleep.js';
 import { verySmartMove } from '../utils/very_smart_move.js';
@@ -13,20 +14,6 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 
 	if (gc.rip) return timeout;
 	if (!self.is_state(BotState.ATTACKING) && !self.is_state(BotState.NONE)) return timeout;
-
-	// Check stackable items in inventory.
-	// If they are shareable, try to move them to the other bots.
-	// const others = self.bots.filter(bot => bot !== self);
-	// const stackable = gc.items.filter((i: ItemData | null) => {
-	// 	if (i === null) return false;
-	// 	return AL.Game.G.items[i.name as ItemName].s !== undefined;
-	// });
-
-	// self.log({
-	// 	message: "Checking stackable items",
-	// 	data: stackable
-	// });
-
 
 	// Auto Sell Items
 	// AGAIN, maybe another task for this
@@ -57,6 +44,38 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 				const gitem = AL.Game.G.items[i.data.name as ItemName];
 				const value = gitem.g * (i.data.q ?? 1) * AL.Game.G.multipliers.buy_to_sell;
 				self.log(`Sold x${i.data.q ?? 1} ${gitem.name} for ${value} gold`, LogLevel.EVENT);
+			}
+			if (self.bot_type !== BotType.Merchant) {
+				const merchant = self.bots.find(bot => bot.bot_type === BotType.Merchant);
+				if (!merchant) return;
+
+				const improvable = Object.entries(Items.locate_items_by_level(self, {
+					exclude_locked: true,
+					exclude_specials: true,
+					min_amount: 1,
+				}));
+				if (improvable.length === 0) return;
+
+				await gc.smartMove({ map: merchant.gc().map, x: merchant.gc().x, y: merchant.gc().y });
+				// This part should be changed to deposit in the gold bank.
+				const g_to_send = Math.max(1, gc.gold - 50000);
+				if (g_to_send > 0) await gc.sendGold(merchant.id, g_to_send).then(() => {
+					self.log(`Sent '${g_to_send} gold' to '${merchant.id}'`, LogLevel.EVENT);
+				}).catch(() => { });
+				// this part should be changed to deposit in the bank.
+				// stackable first then non stackable
+				for (const [, item] of improvable) {
+					for (const [, slots] of Object.entries(item)) {
+						for (const slot of slots) {
+							const i = gc.items[slot]!;
+							const gi = AL.Game.G.items[i.name as ItemName];
+							await gc.sendItem(merchant?.id, slot, i.q ?? 1).then(async () => {
+								self.log(`Sent x${i.q ?? 1} '${gi.name}' to '${merchant?.id}'`, LogLevel.EVENT);
+								await sleep(50);
+							}).catch(() => { });
+						}
+					}
+				}
 			}
 		}).catch(e => { throw new Error(e.message) }).finally(async () => {
 			await sleep(Task.Constants.Timeouts.STATE_RELEASE);
