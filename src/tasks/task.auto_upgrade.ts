@@ -1,0 +1,46 @@
+import { ItemName, Merchant } from "alclient";
+import { Bot, BotState, BotType } from "../classes/bot.js";
+import Items from "../utils/items.js";
+import { LogLevel } from '../utils/logger.js';
+import { sleep } from "../utils/sleep.js";
+
+export async function auto_upgrade<T extends Bot>(self: T, timeout: number): Promise<number> {
+	const gc = self.gc();
+	if (!self.is_state(BotState.NONE) || gc.rip) return timeout;
+	if (self.bot_type !== BotType.Merchant) return timeout;
+
+	const upgradeables = Items.locate_items_by_level(self, {
+		exclude_locked: true,
+		exclude_specials: true,
+		min_amount: 1,
+		only: "upgradable"
+	});
+
+	if (gc.smartMoving) await gc.stopSmartMove();
+	await gc.smartMove({ map: "main", x: -142, y: -144 });
+	mloop: for (const [iname, ilevels] of Object.entries(upgradeables)) {
+		for (const [level, slots] of Object.entries(ilevels)) {
+			const item = gc.items[slots[0]];
+			if (item === null) continue;
+			const scroll_name: ItemName = `scroll${Items.calculate_item_grade(item)}` as ItemName;
+			const q_to_buy = Items.get_qscroll_to_buy(gc, slots.length, scroll_name);
+			if (q_to_buy > 0) await gc.buy(scroll_name, q_to_buy);
+			const scroll_slot = gc.locateItem(scroll_name);
+			if (scroll_slot === -1) {
+				self.log(`Failed to buy ${scroll_name}`, LogLevel.ERROR);
+				continue mloop;
+			}
+			for (const slot of slots) {
+				if (gc.isOnCooldown("massproduction")) await sleep(gc.getCooldown("massproduction") + gc.ping);
+				await self.gc<Merchant>().massProduction();
+				await gc.upgrade(slot, scroll_slot).then((success: boolean) => {
+					if (success)
+						self.log(`Upgraded ${iname} to level ${parseInt(level) + 1}!`, LogLevel.EVENT);
+					else
+						self.log(`Failed to upgrade ${iname} to level ${parseInt(level) + 1}`, LogLevel.EVENT_KO);
+				});
+			}
+		}
+	}
+	return timeout;
+}
