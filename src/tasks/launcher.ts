@@ -27,7 +27,7 @@ export function start<T extends Bot>(
 		clearTimeout(timeout);
 		self.gc().timeouts.delete(timeout_name);
 		// If the bot is idle or the socket is disconnected, reschedule the task.
-		if (self.is_mode(BotMode.Idle) || self.gc().socket.disconnected)
+		if (self.is_mode(BotMode.Idle) || self.gc().socket.disconnected || self.gc().ready === false)
 			return time_fn(task_launcher_fn, default_timeout);
 		// Else, run the task.
 		await task<T>(self, default_timeout).then((timeout: number) =>
