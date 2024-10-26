@@ -129,8 +129,11 @@ export class ItemsManagement {
 		this.update_item("wcap", { improve_to: 8 });
 
 		this.update_item("wbook0", { improve_to: 4 });
+		this.update_item("bow", { improve_to: 8 });
 		this.update_item("hbow", { improve_to: 7 });
+		this.update_item("quiver", { improve_to: 7 });
 		this.update_item("mushroomstaff", { improve_to: 8 });
+		this.update_item("stinger", { improve_to: 6 });
 
 		this.update_item("intamulet", { improve_to: 4 });
 		this.update_item("stramulet", { improve_to: 3 });
