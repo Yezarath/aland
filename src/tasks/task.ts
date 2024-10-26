@@ -13,6 +13,7 @@ import { party } from './task.party.js';
 import { potion } from './task.potion.js';
 import { refill } from './task.refill.js';
 import { respawn } from './task.respawn.js';
+import { survival } from './task.survival.js';
 import { target } from './task.target.js';
 
 
@@ -32,5 +33,6 @@ export default {
 	potion,
 	refill,
 	respawn,
+	survival,
 	target
 };
