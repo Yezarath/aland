@@ -7,19 +7,22 @@ import { Bot } from "../classes/bot.js";
  * @property {boolean} should_sell if true, the item will be sold automatically to npc
  * @property {boolean} should_msell if true, the item will be sold in the merchant stand
  * @property {boolean} should_upgrade if true, the item will be upgraded automatically
+ * @property {boolean} should_compound if true, the item will be compounded automatically
  * -- /those are mutually exclusive --
- * @property {boolean} ignore_titled if true, the title will be ignored when npc selling/upgrading
+ * @property {boolean} ignore_titled if true, the title will be ignored when npc selling/upgrading/compounding
  * @property {boolean} ignore_level if true, the level will be ignored when npc selling
  * @property {number} msell_at if should_msell is true, the amount to sell at
- * @property {number} upgrade_to if should_upgrade is true, the maximum level to upgrade to
+ * @property {number} improve_to if should_upgrade/compound is true, the maximum level to improve to
  */
 
 // Can be changed
 
-const mutually_exclusive_item_options = ["should_sell", "should_msell", "should_upgrade"] as const;
+const mutually_exclusive_item_options = [
+	"should_sell", "should_msell", "should_upgrade", "should_compound"
+] as const;
 type MutuallyExclusiveItemOptions = typeof mutually_exclusive_item_options[number];
 type MandatoryItemOptions = MutuallyExclusiveItemOptions | "ignore_titled" | "ignore_level";
-type OptionalItemOptions = "msell_at" | "upgrade_to";
+type OptionalItemOptions = "msell_at" | "improve_to";
 
 export type ItemOptions = {
 	[P in MandatoryItemOptions]: boolean
@@ -60,23 +63,33 @@ export type ItemInfo = {
 export class ItemsManagement {
 	#items: Record<ItemName, ItemInfo> = {} as Record<ItemName, ItemInfo>;
 
-	static readonly DEF_OPTIONS: ItemOptions = {
-		should_sell: false, should_msell: false, should_upgrade: false,
+	static readonly #DEF_OPTIONS: ItemOptions = {
+		should_sell: false, should_msell: false, should_upgrade: false, should_compound: false,
 		ignore_titled: false, ignore_level: false
 	} as const;
-	static readonly DEF_STORAGE: ItemStorage = {
+	static readonly #DEF_STORAGE: ItemStorage = {
 		storage_place: "inventory", storage_slot: undefined
 	} as const;
+
+	static readonly #DEF_UPGRADE_TO = 5;
+	static readonly #DEF_COMPOUND_TO = 2;
 
 	constructor(bot: Bot) {
 		if (!(bot instanceof Bot)) throw new Error("Invalid bot instance!");
 		if (!AL.Game.G) throw new Error("Game data not loaded!");
 
 		Object.entries(AL.Game.G.items).forEach(([iname, idata]: [string, GItem]) => {
+			const supgr = idata.upgrade !== undefined ? true : false;
+			const scomp = idata.compound !== undefined ? true : false;
+			const imp_to = (!supgr && !scomp) ? undefined : {
+				should_upgrade: supgr,
+				should_compound: scomp,
+				improve_to: supgr ? ItemsManagement.#DEF_UPGRADE_TO : ItemsManagement.#DEF_COMPOUND_TO
+			}
 			this.#items[iname as ItemName] = {
 				data: idata,
-				storage: { ...ItemsManagement.DEF_STORAGE },
-				options: { ...ItemsManagement.DEF_OPTIONS }
+				storage: { ...ItemsManagement.#DEF_STORAGE },
+				options: { ...ItemsManagement.#DEF_OPTIONS, ...imp_to }
 			};
 		});
 		this.load_defaults();
@@ -100,6 +113,37 @@ export class ItemsManagement {
 		this.update_item("hpot0", {}, { storage_slot: 41 });
 		this.update_item("mpot0", {}, { storage_slot: 40 });
 		this.update_item("tracker", {}, { storage_slot: 39 });
+
+
+		// Auto Upgrade items =
+		this.update_item("helmet", { improve_to: 8 });
+		this.update_item("shoes", { improve_to: 8 });
+		this.update_item("pants", { improve_to: 8 });
+		this.update_item("gloves", { improve_to: 8 });
+		this.update_item("coat", { improve_to: 8 });
+
+		this.update_item("wattire", { improve_to: 8 });
+		this.update_item("wgloves", { improve_to: 8 });
+		this.update_item("wbreeches", { improve_to: 8 });
+		this.update_item("wshoes", { improve_to: 8 });
+		this.update_item("wcap", { improve_to: 8 });
+
+		this.update_item("wbook0", { improve_to: 4 });
+		this.update_item("hbow", { improve_to: 7 });
+		this.update_item("mushroomstaff", { improve_to: 8 });
+
+		this.update_item("intamulet", { improve_to: 4 });
+		this.update_item("stramulet", { improve_to: 3 });
+		this.update_item("dexamulet", { improve_to: 3 });
+
+		this.update_item("intbelt", { improve_to: 2 });
+		this.update_item("strbelt", { improve_to: 3 });
+		this.update_item("dexbelt", { improve_to: 3 });
+
+		this.update_item("strearring", { improve_to: 1 });
+		this.update_item("dexearring", { improve_to: 1 });
+		this.update_item("intearring", { improve_to: 1 });
+
 	}
 
 	public set_item(iname: ItemName, options: ItemOptions, storage: ItemStorage) {
