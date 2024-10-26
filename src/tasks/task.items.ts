@@ -4,6 +4,7 @@ import Task from '../tasks/task.js';
 import CaughtPromise from '../utils/caught_promise.js';
 import { LogLevel } from '../utils/logger.js';
 import { sleep } from '../utils/sleep.js';
+import { verySmartMove } from '../utils/very_smart_move.js';
 
 // task auto sell items ?? or doing something else ?? will see later
 // might do the share stackable idems with other bots in there
@@ -30,7 +31,7 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 	// Auto Sell Items
 	// AGAIN, maybe another task for this
 	if (!self.is_state(BotState.ATTACKING) && !self.is_state(BotState.NONE)) return timeout;
-	if (self.gc().isFull() || self.is_state(BotState.NONE)) {
+	if (gc.isFull() || self.is_state(BotState.NONE)) {
 		const can_sell = self.iconfig.get_items({ should_sell: true });
 		const to_sell = gc.items.map((i: ItemData | null, index: number) => {
 			if (i) {
@@ -48,8 +49,7 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 		const state = self.state;
 		await CaughtPromise(async () => {
 			self.state = BotState.SELLING;
-			if (gc.smartMoving) await gc.stopSmartMove();
-			await gc.smartMove(Task.Constants.Basics.HPOT_TYPE, {
+			await verySmartMove(self, Task.Constants.Basics.HPOT_TYPE, {
 				getWithin: AL.Constants.NPC_INTERACTION_DISTANCE / 2
 			});
 			for (const i of to_sell) {

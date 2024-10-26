@@ -4,6 +4,7 @@ import Task from '../tasks/task.js';
 import CaughtPromise from '../utils/caught_promise.js';
 import { LogLevel } from "../utils/logger.js";
 import { sleep } from '../utils/sleep.js';
+import { verySmartMove } from '../utils/very_smart_move.js';
 
 export async function refill<T extends Bot>(self: T, timeout: number): Promise<number> {
 	const gc = self.gc();
@@ -31,7 +32,7 @@ export async function refill<T extends Bot>(self: T, timeout: number): Promise<n
 		const mpot_cost = gc.G.items[mpn].g * mpot_tob;
 
 		if (gc.gold >= hpot_cost && hpot_tob > 0) {
-			await gc.smartMove(hpn, {
+			await verySmartMove(self, hpn, {
 				getWithin: AL.Constants.NPC_INTERACTION_DISTANCE / 2
 			});
 			await gc.buy(Task.Constants.Basics.HPOT_TYPE, hpot_tob);
@@ -39,7 +40,7 @@ export async function refill<T extends Bot>(self: T, timeout: number): Promise<n
 		}
 		// Might not be the same refill npc ? don't know yet, might delete later.
 		if (gc.gold >= mpot_cost && mpot_tob > 0) {
-			await gc.smartMove(mpn, {
+			await verySmartMove(self, mpn, {
 				getWithin: AL.Constants.NPC_INTERACTION_DISTANCE / 2
 			});
 			await gc.buy(Task.Constants.Basics.MPOT_TYPE, mpot_tob);

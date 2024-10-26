@@ -4,6 +4,7 @@ import CaughtPromise from "../utils/caught_promise.js";
 import Config from "../utils/config.js";
 import { LogLevel } from "../utils/logger.js";
 import { sleep } from "../utils/sleep.js";
+import { verySmartMove } from "../utils/very_smart_move.js";
 import TaskLauncher from "./launcher.js";
 import Task from "./task.js";
 
@@ -26,7 +27,7 @@ export async function hunt_start<T extends Bot>(self: T, timeout: number): Promi
 			}, LogLevel.EVENT);
 			self.targets = [gc.s.monsterhunt.id];
 			TaskLauncher.restart(hunt_finish, self, Task.Constants.Timeouts.HUNT_FINISH);
-		} else self.log("ID not allowed, Monster hunt ignored!", LogLevel.EVENT);
+		} else self.log("ID not allowed, Monster hunt ignored!", LogLevel.EVENT_KO);
 		return gc.s.monsterhunt.ms + gc.ping + Task.Constants.Timeouts.HUNT_OFFSET;
 	}
 	// Go and take the monsterhunt quest.
@@ -35,8 +36,7 @@ export async function hunt_start<T extends Bot>(self: T, timeout: number): Promi
 	const state = self.state;
 	self.state = BotState.TAKE_QUEST;
 	await CaughtPromise(async () => {
-		if (gc.smartMoving) await gc.stopSmartMove();
-		await gc.smartMove("monsterhunter");
+		await verySmartMove(self, "monsterhunter");
 		await gc.getMonsterHuntQuest();
 		self.log("Monster hunt quest taken!", LogLevel.EVENT);
 	}).catch(e => { throw new Error(e.message) }).finally(async () => {
@@ -59,14 +59,13 @@ export async function hunt_finish<T extends Bot>(self: T, timeout: number): Prom
 	const state = self.state;
 	self.state = BotState.END_QUEST;
 	await CaughtPromise(async () => {
-		if (gc.smartMoving) await gc.stopSmartMove();
-		await gc.smartMove("monsterhunter");
+		await verySmartMove(self, "monsterhunter");
 		await gc.finishMonsterHuntQuest();
 
 		self.log("Monster hunt completed!", LogLevel.EVENT);
 		TaskLauncher.restart(hunt_start, self, Task.Constants.Timeouts.HUNT_START);
 		timeout = timeout + Task.Constants.Timeouts.HUNT_OFFSET;
-		self.targets = Config.get_config<MonsterName[]>("targets") ?? [];
+		self.targets = self.get_targets();
 	}).catch(e => { throw new Error(e.message) }).finally(async () => {
 		await sleep(Task.Constants.Timeouts.STATE_RELEASE);
 		self.state = state;

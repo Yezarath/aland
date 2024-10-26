@@ -1,6 +1,8 @@
 
 import Constants from './constants.js';
 import { attack } from './task.attack.js';
+import { auto_compound } from './task.auto_compound.js';
+import { auto_upgrade } from './task.auto_upgrade.js';
 import { hunt_finish, hunt_start } from './task.hunt.js';
 import { items } from './task.items.js';
 import { loot } from './task.loot.js';
@@ -17,6 +19,8 @@ import { target } from './task.target.js';
 export default {
 	Constants,
 	attack,
+	auto_upgrade,
+	auto_compound,
 	loot,
 	hunt_finish,
 	hunt_start,
