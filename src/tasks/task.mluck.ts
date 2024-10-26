@@ -13,11 +13,13 @@ export async function mluck<T extends Bot>(self: T, timeout: number): Promise<nu
 		ignoreCooldown: true, ignoreEquipped: true, ignoreMP: true
 	})) return timeout;
 
-	const filter_fn = (character: Player | Character): boolean => {
-		if (!character.s.mluck) return true;
-		if (character.ctype === "merchant") return false;
-		if (character.s.mluck.ms < 1_200_000 && character.s.mluck.f === gc.id) return true;
-		if (character.s.mluck.f !== gc.id && !character.s.mluck.strong) return true;
+	const filter_fn = (p: Player | Character): boolean => {
+		if (!p.s.mluck) return true;
+		if (p.ctype === "merchant") return false;
+		if (p.id === "Sneakmato") return false; // Temporary fix for ignoreIDs, remove when PR validated.
+		if (p.afk && p.afk === true && p.s.mluck.ms > 3_500_000) return false;
+		if (p.s.mluck.ms < 1_200_000 && p.s.mluck.f === gc.id) return true;
+		if (p.s.mluck.f !== gc.id && !p.s.mluck.strong) return true;
 		return false;
 	};
 
