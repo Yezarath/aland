@@ -1,5 +1,5 @@
 import { MonsterName } from "alclient";
-import Config from "../utils/config.js";
+// import Config from "../utils/config.js";
 import { LogLevel } from "../utils/logger.js";
 import { Bot, BotMode, BotState, BotType } from "./bot.js";
 
@@ -10,9 +10,14 @@ export class BotWarrior extends Bot {
 		super(id, BotType.Warrior);
 	}
 
+	public get_targets(): MonsterName[] {
+		// return Config.get_config<MonsterName[]>("targets") ?? [];
+		return ["arcticbee", "phoenix"];
+	}
+
 	async run(): Promise<void> {
 		await super.run(() => {
-			this.targets = Config.get_config<MonsterName[]>("targets") ?? [];
+			this.targets = this.get_targets();
 			this.mode = BotMode.Running;
 			this.state = BotState.ATTACKING;
 		}).catch(e => this.log(e.message, LogLevel.ERROR));
