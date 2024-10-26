@@ -15,6 +15,7 @@ export async function mluck<T extends Bot>(self: T, timeout: number): Promise<nu
 
 	const filter_fn = (character: Player | Character): boolean => {
 		if (!character.s.mluck) return true;
+		if (character.ctype === "merchant") return false;
 		if (character.s.mluck.ms < 1_200_000 && character.s.mluck.f === gc.id) return true;
 		if (character.s.mluck.f !== gc.id && !character.s.mluck.strong) return true;
 		return false;
@@ -26,8 +27,9 @@ export async function mluck<T extends Bot>(self: T, timeout: number): Promise<nu
 	};
 
 	const gc = self.gc<Merchant>();
-	const to_buff = gc.getPlayers({ isDead: false, withinRange: "mluck", isNPC: false })
-		.filter(filter_fn);
+	const to_buff = gc.getPlayers({
+		isDead: false, withinRange: "mluck", isNPC: false, ignoreIDs: ["Sneakmato"]
+	}).filter(filter_fn);
 	// .slice(0, 5) // maximum of 5 buffs per rotation, cost 20mp each, 100mp total in 1s.
 	for (const player of to_buff) await apply(player);
 	if (filter_fn(gc)) await apply(gc);
