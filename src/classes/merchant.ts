@@ -1,4 +1,4 @@
-import { ItemName } from "alclient";
+import { ItemName, MonsterName } from "alclient";
 import { LogLevel } from "../utils/logger.js";
 import { Bot, BotMode, BotState, BotType } from "./bot.js";
 
@@ -10,6 +10,10 @@ export class BotMerchant extends Bot {
 		this.set_personal_iconfig();
 	}
 
+	public get_targets(): MonsterName[] {
+		return [];
+	}
+
 	private set_personal_iconfig() {
 		let tracker_slot = this.iconfig.get_item("tracker").storage.storage_slot ?? 39;
 
@@ -18,6 +22,7 @@ export class BotMerchant extends Bot {
 			if (tracker_slot - 1 > 0)
 				this.iconfig.update_item(item, {}, { storage_slot: tracker_slot-- });
 		}
+		this.iconfig.update_item("ringsj", { should_compound: true, improve_to: 3 }, { storage_place: "inventory" });
 	}
 
 	async run(): Promise<void> {
