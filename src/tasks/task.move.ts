@@ -1,5 +1,6 @@
 import { Tools, Warrior } from "alclient"; // Adjust the import path as necessary
 import { Bot, BotState } from "../classes/bot.js";
+import { verySmartMove } from "../utils/very_smart_move.js";
 
 export async function move<T extends Bot>(self: T, timeout: number): Promise<number> {
 	const gc = self.gc();
@@ -12,8 +13,7 @@ export async function move<T extends Bot>(self: T, timeout: number): Promise<num
 	if (!target) {
 		const nearest = gc.getEntity(self.get_attack_filter());
 		if (!nearest) {
-			if (gc.smartMoving) await gc.stopSmartMove();
-			await gc.smartMove(self.targets[0], {
+			await verySmartMove(self, self.targets[0], {
 				resolveOnFinalMoveStart: true,
 				getWithin: gc.range
 			});
