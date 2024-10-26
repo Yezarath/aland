@@ -175,7 +175,10 @@ export abstract class Bot {
 			} else {
 				TaskLauncher.start(Task.mstand, this, Task.Constants.Timeouts.MSTAND);
 				TaskLauncher.start(Task.mluck, this, Task.Constants.Timeouts.MLUCK);
+				TaskLauncher.start(Task.auto_upgrade, this, Task.Constants.Timeouts.AUTO_UPGRADE);
+				TaskLauncher.start(Task.auto_compound, this, Task.Constants.Timeouts.AUTO_COMPOUND);
 			}
+
 			TaskLauncher.start(Task.items, this, Task.Constants.Timeouts.SELLING);
 			TaskLauncher.start(Task.refill, this, Task.Constants.Timeouts.REFILL);
 			TaskLauncher.start(Task.potion, this, Task.Constants.Timeouts.POTION);
@@ -281,4 +284,6 @@ export abstract class Bot {
 			willBurnToDeath: false, willDieToProjectiles: false
 		};
 	}
+
+	abstract get_targets(): MonsterName[];
 }
