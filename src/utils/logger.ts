@@ -6,13 +6,14 @@ import { BotType } from '../classes/bot.js';
 import Config from './config.js';
 
 export enum LogLevel {
-	INFO = 'INFO',
-	WARNING = 'WARNING',
-	ERROR = 'ERROR',
-	DEBUG = 'DEBUG',
-	EVENT = 'EVENT',
-	LOOT = 'LOOT',
-	GOLD = 'GOLD',
+	INFO,
+	WARNING,
+	ERROR,
+	DEBUG,
+	EVENT,
+	EVENT_KO,
+	LOOT,
+	GOLD,
 }
 
 function get_log_color(log_level: LogLevel): string {
@@ -22,6 +23,7 @@ function get_log_color(log_level: LogLevel): string {
 	if (log_level === LogLevel.GOLD) return '\x1b[38;5;226m'; // Light yellow
 	if (log_level === LogLevel.DEBUG) return '\x1b[38;5;250m'; // Light grey
 	if (log_level === LogLevel.EVENT) return '\x1b[38;2;250;179;135m'; // rgb(250, 179, 135)
+	if (log_level === LogLevel.EVENT_KO) return '\x1b[38;2;255;140;0m'; // Darker orange
 	/**(log_level === LogLevel.Info)**/return '\x1b[34m';
 }
 
