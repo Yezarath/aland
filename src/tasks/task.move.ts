@@ -10,7 +10,7 @@ export async function move<T extends Bot>(self: T, timeout: number): Promise<num
 	if (self.targets.length === 0 || gc.rip) return timeout;
 
 	const target = gc.getTargetEntity();
-	if (!target) {
+	if (!target || !self.targets.includes(target.type)) {
 		const nearest = gc.getEntity(self.get_attack_filter());
 		if (!nearest) {
 			await verySmartMove(self, self.targets[0], {
