@@ -46,7 +46,7 @@ function is_ignored_error(message: LogMessage): boolean {
 	return [
 		/smartMove to .* cancelled \(new smartMove started\)/,
 		/target '\d+' not found/,
-		// /We are having some trouble smartMoving/,
+		/We are having some trouble smartMoving/,
 		/acceptPartyInvite timeout/,
 		/sendPartyInvite timeout/,
 		/'attack' failed \(too far\) \(dist: undefined\)/,
