@@ -8,7 +8,7 @@ export const Constants = {
 		AUTO_COMPOUND: 500,
 		SURVIVAL: 10,
 		TARGET: 30,
-		LOOT: 250,
+		LOOT: 500,
 		POTION: 350,
 		HUNT_START: 1000,
 		HUNT_OFFSET: 50000,
