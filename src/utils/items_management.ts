@@ -103,8 +103,17 @@ export class ItemsManagement {
 		this.update_item("whiteegg", { should_sell: true, ignore_titled: true }, { storage_place: "none" });
 		this.update_item("vitearring", { should_sell: true, ignore_titled: true }, { storage_place: "none" });
 		this.update_item("vitring", { should_sell: true, ignore_titled: true }, { storage_place: "none" });
-		this.update_item("phelmet", { should_sell: true }, { storage_place: "none" });
 		this.update_item("gslime", { should_sell: true }, { storage_place: "none" });
+
+		this.update_item("throwingstars", { should_sell: true }, { storage_place: "none" });
+		this.update_item("pmaceofthedead", { should_sell: true }, { storage_place: "none" });
+		this.update_item("bowofthedead", { should_sell: true }, { storage_place: "none" });
+		this.update_item("staffofthedead", { should_sell: true }, { storage_place: "none" });
+		this.update_item("phelmet", { should_sell: true }, { storage_place: "none" });
+		this.update_item("skullamulet", { should_sell: true }, { storage_place: "none" });
+		this.update_item("gphelmet", { should_sell: true }, { storage_place: "none" });
+		this.update_item("lantern", { should_sell: true }, { storage_place: "none" });
+		this.update_item("smoke", { should_sell: true }, { storage_place: "none" });
 
 		// Set the items to be placed at specific slots in the inventory. Not yet implemented.
 		this.update_item("hpot0", {}, { storage_slot: 41 });
@@ -121,20 +130,31 @@ export class ItemsManagement {
 		this.update_item("coat", { improve_to: 8 });
 
 		// -- Armors -- T1*
-		this.update_item("wattire", { improve_to: 8 });
-		this.update_item("wgloves", { improve_to: 8 });
-		this.update_item("wbreeches", { improve_to: 8 });
-		this.update_item("wshoes", { improve_to: 8 });
-		this.update_item("wcap", { improve_to: 8 });
+		// this.update_item("wattire", { improve_to: 8 });
+		// this.update_item("wgloves", { improve_to: 8 });
+		// this.update_item("wbreeches", { improve_to: 8 });
+		// this.update_item("wshoes", { improve_to: 8 });
+		// this.update_item("wcap", { improve_to: 8 });
+		this.update_item("wattire", { should_sell: true }, { storage_place: "none" });
+		this.update_item("wgloves", { should_sell: true }, { storage_place: "none" });
+		this.update_item("wbreeches", { should_sell: true }, { storage_place: "none" });
+		this.update_item("wshoes", { should_sell: true }, { storage_place: "none" });
+		this.update_item("wcap", { should_sell: true }, { storage_place: "none" });
 
 		// -- Wearpons --
 		this.update_item("bow", { improve_to: 8 });
 		this.update_item("hbow", { improve_to: 7 });
 		this.update_item("mushroomstaff", { improve_to: 8 });
 		this.update_item("stinger", { improve_to: 6 });
+		this.update_item("broom", { improve_to: 6 });
+		this.update_item("rod", { improve_to: 5 });
+
+		this.update_item("fireblade", { improve_to: 7 });
+		this.update_item("firebow", { improve_to: 7 });
+		this.update_item("firestaff", { improve_to: 7 });
 
 		// -- Offhands --
-		this.update_item("quiver", { improve_to: 7 });
+		this.update_item("quiver", { improve_to: 8 });
 		this.update_item("wbook0", { improve_to: 4 });
 
 
@@ -163,6 +183,8 @@ export class ItemsManagement {
 		// -- Capes --
 
 		// -- Orbs --
+		this.update_item("orbg", { improve_to: 3 });
+		this.update_item("jacko", { improve_to: 3 });
 	}
 
 	public set_item(iname: ItemName, options: ItemOptions, storage: ItemStorage) {
