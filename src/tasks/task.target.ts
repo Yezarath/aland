@@ -1,5 +1,5 @@
 import { Tools } from "alclient";
-import { Bot, BotState } from "../classes/bot.js";
+import { Bot, BotState, BotType } from "../classes/bot.js";
 
 
 export async function target<T extends Bot>(self: T, timeout: number): Promise<number> {
@@ -21,7 +21,7 @@ export async function target<T extends Bot>(self: T, timeout: number): Promise<n
 	const filter = self.get_attack_filter();
 	// Get a new target
 	const new_target = gc.getEntity({
-		...filter, targetingPartyMember: true,
+		...filter, targetingPartyMember: true, returnLowestHP: true, returnFurthest: self.bot_type === BotType.Ranger,
 		withinRange: gc.range * 1.5
 	}) ?? gc.getEntity(filter);
 
