@@ -16,8 +16,6 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 	if (!self.is_state(BotState.ATTACKING) && !self.is_state(BotState.NONE)) return timeout;
 
 	// Auto Sell Items
-	// AGAIN, maybe another task for this
-	if (!self.is_state(BotState.ATTACKING) && !self.is_state(BotState.NONE)) return timeout;
 	if (gc.isFull() || self.is_state(BotState.NONE)) {
 		const can_sell = self.iconfig.get_items({ should_sell: true });
 		const to_sell = gc.items.map((i: ItemData | null, index: number) => {
@@ -31,7 +29,12 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 			}
 			return undefined;
 		}).filter((i) => i !== undefined);
-		if (to_sell.length === 0) return timeout;
+		const improvable = Object.entries(Items.locate_items_by_level(self, {
+			exclude_locked: true,
+			exclude_specials: true,
+			min_amount: 1,
+		}));
+		if (to_sell.length === 0 && improvable.length === 0) return timeout;
 
 		const state = self.state;
 		await CaughtPromise(async () => {
@@ -45,16 +48,9 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 				const value = gitem.g * (i.data.q ?? 1) * AL.Game.G.multipliers.buy_to_sell;
 				self.log(`Sold x${i.data.q ?? 1} ${gitem.name} for ${value} gold`, LogLevel.EVENT);
 			}
-			if (self.bot_type !== BotType.Merchant) {
+			if (self.bot_type !== BotType.Merchant && improvable.length > 0) {
 				const merchant = self.bots.find(bot => bot.bot_type === BotType.Merchant);
 				if (!merchant) return;
-
-				const improvable = Object.entries(Items.locate_items_by_level(self, {
-					exclude_locked: true,
-					exclude_specials: true,
-					min_amount: 1,
-				}));
-				if (improvable.length === 0) return;
 
 				await gc.smartMove({ map: merchant.gc().map, x: merchant.gc().x, y: merchant.gc().y });
 				// This part should be changed to deposit in the gold bank.
