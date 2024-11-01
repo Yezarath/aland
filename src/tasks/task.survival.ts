@@ -33,31 +33,32 @@ export async function survival<T extends Bot>(self: T, timeout: number): Promise
 	if (gc.c.town) return timeout;
 
 	const state = self.state;
-	const targets = gc.getEntities({
+	const targeting_us = gc.getEntities({
 		targetingMe: true,
 		hasTarget: true
 	});
-	for (const target of targets) {
-		const damage = target.calculateDamageRange(gc);
-		// Target damage will kill us
-		if (damage[0] * 1.5 >= gc.hp || damage[1] * 1.5 >= gc.hp) {
-			await exec_survival(self, "Target damage will kill us").finally(() => { self.state = state });
-			break
-		}
-		const monster = gc.G.monsters[target.type];
-		// @INFO: dreturn work only if the character have less than 75 range, and the damage is physical
-		if (monster.dreturn && gc.damage_type === "physical" && gc.target === target.id && gc.range < 75) {
-			const damage = gc.calculateDamageRange(target, "attack");
-			[damage[0], damage[1]] = [damage[0] * monster.dreturn / 100, damage[1] * monster.dreturn / 100];
-			if (damage[0] >= gc.hp || damage[1] >= gc.hp) {
-				self.log({ message: "Dreturn", data: { damage } });
-				await exec_survival(self, "DReturn of target will kill us").finally(() => { self.state = state });
-				break
+
+	const damage = [0, 0];
+	const multiplier = 1.5 * targeting_us.length;
+	for (const target of targeting_us) {
+		const target_damage = target.calculateDamageRange(gc);
+		[damage[0], damage[1]] = [damage[0] + target_damage[0], damage[1] + target_damage[1]];
+	}
+	if (damage[0] * multiplier >= gc.hp || damage[1] * multiplier >= gc.hp)
+		await exec_survival(self, "Targeting us will kill us").finally(() => { self.state = state });
+	else {
+		const target = gc.getTargetEntity()
+		if (target) {
+			const monster = gc.G.monsters[target.type];
+			if (monster.dreturn && gc.damage_type === "physical" && gc.range < 75) {
+				const damage = gc.calculateDamageRange(target, "attack");
+				[damage[0], damage[1]] = [damage[0] * monster.dreturn / 100, damage[1] * monster.dreturn / 100];
+				if (damage[0] >= gc.hp || damage[1] >= gc.hp)
+					await exec_survival(self, "DReturn of target will kill us").finally(() => { self.state = state });
 			}
 		}
 		// Burn damage
 		// Poison damage
 	}
-
 	return timeout;
 }
