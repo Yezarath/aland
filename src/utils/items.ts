@@ -58,13 +58,14 @@ export function calculate_item_grade(item: ItemData): number {
 
 export function get_qscroll_to_buy(gc: PingCompensatedCharacter, slots: number, scroll_name: ItemName): number {
 	let q_to_buy = slots;
+	let offset = 1;
 	const scroll_slot = gc.locateItem(scroll_name);
 	if (scroll_slot !== -1) {
 		const scroll_q = gc.items[scroll_slot]?.q ?? 0;
-		if (scroll_q < q_to_buy)
-			q_to_buy = q_to_buy - scroll_q;
+		if (!(q_to_buy >= scroll_q)) offset = 0;
+		q_to_buy = Math.max(0, q_to_buy - scroll_q);
 	}
-	return q_to_buy;
+	return q_to_buy + offset;
 }
 
 export default { locate_items_by_level, calculate_item_grade, get_qscroll_to_buy };
