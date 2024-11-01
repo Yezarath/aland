@@ -24,6 +24,7 @@ class __Config {
 		this.set_config<boolean>("printing_gold", false);
 		this.set_config<MonsterName[]>("targets", [
 			"bat",
+			// "squigtoad", "squig",
 			// "minimush",
 			"mrpumpkin", "mrgreen", "phoenix",
 
@@ -45,6 +46,41 @@ class __Config {
 	}
 
 	load_config() {
+		const config_path = path.resolve(
+			path.dirname(new URL(import.meta.url).pathname),
+			'../config.json'
+		);
+		if (!fs.existsSync(config_path)) {
+			Logger.warn("Config", "Config file not found, creating a new one");
+			fs.writeFileSync(config_path,
+				JSON.stringify(__Config.#values, null, 2)
+			);
+		} else {
+			const fc = fs.readFileSync(config_path, 'utf-8');
+			try {
+				const cfg = JSON.parse(fc);
+				if (typeof cfg !== 'object' || cfg === null) {
+					throw new Error("Invalid config file");
+				}
+				for (const key in cfg) {
+					if (!(key in __Config.#values)) {
+						Logger.warn("Config", `Unknown key in config: '${key}'`);
+						delete cfg[key];
+						continue;
+					}
+					if (typeof cfg[key] !== typeof __Config.#values[key]) {
+						cfg[key] = __Config.#values[key];
+						Logger.error("Config", `Invalid type for key: '${key}'`);
+						Logger.warn("Config",
+							`Using default value: '${key}'='${cfg[key]}'`
+						);
+					}
+				}
+				__Config.#values = cfg;
+			} catch (error: unknown) {
+				throw new Error("Error loading config file: " + error);
+			}
+		}
 		Logger.log("Config", "Config loaded!");
 	}
 
