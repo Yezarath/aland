@@ -26,6 +26,7 @@ export enum BotState {
 	END_QUEST,
 	SELLING,
 	RETREATING,
+	POSITIONING,
 }
 
 export enum BotType {
