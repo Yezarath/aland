@@ -11,8 +11,9 @@ export async function mstand<T extends Bot>(self: T, timeout: number): Promise<n
 
 	const gc = self.gc() as GameMerchant;
 	if (gc.rip) return timeout;
+	if (gc.c.town) return timeout;
 
-	if (gc.moving) {
+	if (gc.moving || gc.smartMoving) {
 		if (gc.stand) await gc.closeMerchantStand()
 	} else {
 		if (!gc.stand) await gc.openMerchantStand()
