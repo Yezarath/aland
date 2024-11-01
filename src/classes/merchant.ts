@@ -22,7 +22,6 @@ export class BotMerchant extends Bot {
 			if (tracker_slot - 1 > 0)
 				this.iconfig.update_item(item, {}, { storage_slot: tracker_slot-- });
 		}
-		this.iconfig.update_item("ringsj", { should_compound: true, improve_to: 3 }, { storage_place: "inventory" });
 	}
 
 	async run(): Promise<void> {
