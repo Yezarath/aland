@@ -19,8 +19,7 @@ async function run() {
 		Logger.log("System", "Game data loaded!");
 
 		await AL.Pathfinder.prepare(AL.Game.G, {
-			remove_abtesting: true, remove_test: true, cheat: true,
-			remove_bank_b: true, remove_bank_u: true
+			remove_abtesting: true, remove_test: true, cheat: true
 		});
 
 		Logger.log("System", "Pathfinder ready!");
