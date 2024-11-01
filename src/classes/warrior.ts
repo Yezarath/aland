@@ -1,5 +1,5 @@
 import { MonsterName } from "alclient";
-// import Config from "../utils/config.js";
+import Config from "../utils/config.js";
 import { LogLevel } from "../utils/logger.js";
 import { Bot, BotMode, BotState, BotType } from "./bot.js";
 
@@ -11,8 +11,9 @@ export class BotWarrior extends Bot {
 	}
 
 	public get_targets(): MonsterName[] {
-		// return Config.get_config<MonsterName[]>("targets") ?? [];
-		return ["arcticbee", "phoenix"];
+		return Config.get_config<MonsterName[]>("targets") ?? [];
+		// return ["bat", "phoenix"];
+		// return ["croc", "phoenix"];
 	}
 
 	async run(): Promise<void> {
