@@ -6,6 +6,7 @@ export const Constants = {
 		ATTACK: 10,
 		AUTO_UPGRADE: 500,
 		AUTO_COMPOUND: 500,
+		AUTO_EXCHANGE: 500,
 		SURVIVAL: 10,
 		TARGET: 30,
 		LOOT: 500,
