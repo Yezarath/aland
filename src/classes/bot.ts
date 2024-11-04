@@ -173,7 +173,7 @@ export abstract class Bot {
 				TaskLauncher.start(Task.move, this, Task.Constants.Timeouts.MOVE);
 				TaskLauncher.start(Task.attack, this, Task.Constants.Timeouts.ATTACK);
 				TaskLauncher.start(Task.target, this, Task.Constants.Timeouts.TARGET);
-				TaskLauncher.start(Task.hunt_start, this, Task.Constants.Timeouts.HUNT_START);
+				// TaskLauncher.start(Task.hunt_start, this, Task.Constants.Timeouts.HUNT_START);
 				TaskLauncher.start(Task.survival, this, Task.Constants.Timeouts.SURVIVAL);
 			} else {
 				TaskLauncher.start(Task.mstand, this, Task.Constants.Timeouts.MSTAND);
