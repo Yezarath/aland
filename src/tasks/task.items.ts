@@ -63,10 +63,11 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 				for (const [, item] of improvable) {
 					for (const [, slots] of Object.entries(item)) {
 						for (const slot of slots) {
-							const i = gc.items[slot]!;
+							const i = gc.items[slot];
+							if (!i) continue;
 							const gi = AL.Game.G.items[i.name as ItemName];
 							await gc.sendItem(merchant?.id, slot, i.q ?? 1).then(async () => {
-								self.log(`Sent x${i.q ?? 1} '${gi.name}' to '${merchant?.id}'`, LogLevel.EVENT);
+								self.log(`Sent x${i.q ?? 1} '${gi?.name ?? i.name}' to '${merchant?.id}'`, LogLevel.EVENT);
 								await sleep(50);
 							}).catch(() => { });
 						}

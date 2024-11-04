@@ -171,12 +171,12 @@ export class ItemsManagement {
 
 		// -- Earrings --
 		this.update_item("strearring", { improve_to: 2 });
-		this.update_item("dexearring", { improve_to: 1 });
-		this.update_item("intearring", { improve_to: 1 });
+		this.update_item("dexearring", { improve_to: 2 });
+		this.update_item("intearring", { improve_to: 2 });
 
 		// -- Rings --
-		this.update_item("ringsj", { improve_to: 3 });
-		this.update_item("strring", { improve_to: 3 });
+		this.update_item("ringsj", { /*improve_to: 4,*/ should_sell: true });
+		this.update_item("strring", { improve_to: 4 });
 		this.update_item("dexring", { improve_to: 3 });
 		this.update_item("intring", { improve_to: 3 });
 
