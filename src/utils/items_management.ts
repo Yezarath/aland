@@ -161,8 +161,8 @@ export class ItemsManagement {
 		// Auto Compound items =
 		// -- Amulet --
 		this.update_item("intamulet", { improve_to: 4 });
-		this.update_item("stramulet", { improve_to: 3 });
-		this.update_item("dexamulet", { improve_to: 3 });
+		this.update_item("stramulet", { improve_to: 4 });
+		this.update_item("dexamulet", { improve_to: 4 });
 
 		// -- Belt --
 		this.update_item("intbelt", { improve_to: 2 });

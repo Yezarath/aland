@@ -2,5 +2,5 @@ build/
 credentials.json
 snippet.js
 package-lock.json
-G_803.json
+G_*.json
 node_modules/

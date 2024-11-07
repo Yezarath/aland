@@ -42,12 +42,15 @@ export async function items<T extends Bot>(self: T, timeout: number): Promise<nu
 			await verySmartMove(self, Task.Constants.Basics.HPOT_TYPE, {
 				getWithin: AL.Constants.NPC_INTERACTION_DISTANCE / 2
 			});
+			let total = 0;
 			for (const i of to_sell) {
 				await gc.sell(i.slot, i.data.q ?? 1);
 				const gitem = AL.Game.G.items[i.data.name as ItemName];
 				const value = gitem.g * (i.data.q ?? 1) * AL.Game.G.multipliers.buy_to_sell;
+				total += ((i.data.q ?? 1) * value);
 				self.log(`Sold x${i.data.q ?? 1} ${gitem.name} for ${value} gold`, LogLevel.EVENT);
 			}
+			if (total > 0) self.log(`Total gold earned: ${total}`, LogLevel.EVENT);
 			if (self.bot_type !== BotType.Merchant && improvable.length > 0) {
 				const merchant = self.bots.find(bot => bot.bot_type === BotType.Merchant);
 				if (!merchant) return;
