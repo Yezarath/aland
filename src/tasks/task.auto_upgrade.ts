@@ -29,7 +29,7 @@ export async function auto_upgrade<T extends Bot>(self: T, timeout: number): Pro
 			const item = gc.items[slots[0]];
 			if (item === null) continue;
 			const scroll_name: ItemName = `scroll${Items.calculate_item_grade(item)}` as ItemName;
-			if (scroll_name === "scroll2") continue;
+			// if (scroll_name === "scroll2") continue;
 			const q_to_buy = Items.get_qscroll_to_buy(gc, slots.length, scroll_name);
 			if (q_to_buy > 0) {
 				await gc.buy(scroll_name, q_to_buy);

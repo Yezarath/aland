@@ -141,12 +141,19 @@ export class ItemsManagement {
 		this.update_item("wshoes", { should_sell: true }, { storage_place: "none" });
 		this.update_item("wcap", { should_sell: true }, { storage_place: "none" });
 
+		// -- Armors -- T2
+		this.update_item("helmet1", { improve_to: 7 });
+		this.update_item("shoes1", { improve_to: 7 });
+		this.update_item("pants1", { improve_to: 7 });
+		this.update_item("gloves1", { improve_to: 7 });
+		this.update_item("coat1", { improve_to: 7 });
+
 		// -- Wearpons --
 		this.update_item("bow", { improve_to: 8 });
 		this.update_item("hbow", { improve_to: 7 });
 		this.update_item("mushroomstaff", { improve_to: 8 });
 		this.update_item("stinger", { improve_to: 6 });
-		this.update_item("broom", { improve_to: 6 });
+		this.update_item("broom", { improve_to: 8 });
 		this.update_item("rod", { improve_to: 5 });
 
 		this.update_item("fireblade", { improve_to: 7 });
@@ -165,12 +172,12 @@ export class ItemsManagement {
 		this.update_item("dexamulet", { improve_to: 4 });
 
 		// -- Belt --
-		this.update_item("intbelt", { improve_to: 2 });
+		this.update_item("intbelt", { improve_to: 3 });
 		this.update_item("strbelt", { improve_to: 3 });
 		this.update_item("dexbelt", { improve_to: 3 });
 
 		// -- Earrings --
-		this.update_item("strearring", { improve_to: 2 });
+		this.update_item("strearring", { improve_to: 3 });
 		this.update_item("dexearring", { improve_to: 2 });
 		this.update_item("intearring", { improve_to: 2 });
 
@@ -181,6 +188,7 @@ export class ItemsManagement {
 		this.update_item("intring", { improve_to: 3 });
 
 		// -- Capes --
+		this.update_item("ecape", { improve_to: 7 });
 
 		// -- Orbs --
 		this.update_item("orbg", { improve_to: 3 });
