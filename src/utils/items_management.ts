@@ -156,7 +156,7 @@ export class ItemsManagement {
 		this.update_item("broom", { improve_to: 8 });
 		this.update_item("rod", { improve_to: 5 });
 
-		this.update_item("fireblade", { improve_to: 7 });
+		this.update_item("fireblade", { improve_to: 8 });
 		this.update_item("firebow", { improve_to: 7 });
 		this.update_item("firestaff", { improve_to: 7 });
 
